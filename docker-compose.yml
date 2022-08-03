@@ -1,0 +1,27 @@
+services:
+  traefik:
+    image: traefik:v2.8
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --certificatesresolvers.selfhostedservices.acme.tlschallenge=true
+      - --certificatesresolvers.selfhostedservices.acme.email=${LETSENCRYPT_EMAIL}
+      - --certificatesresolvers.selfhostedservices.acme.storage=/letsencrypt/acme.json
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ${LETSENCRYPT_PATH}:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
