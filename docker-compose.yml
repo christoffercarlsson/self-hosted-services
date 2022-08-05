@@ -19,6 +19,19 @@ services:
     volumes:
       - ${LETSENCRYPT_PATH}:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  bitwarden:
+    image: vaultwarden/server:latest
+    container_name: bitwarden
+    restart: unless-stopped
+    volumes:
+      - ${BITWARDEN_PATH}:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bitwarden.entrypoints=websecure
+      - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_HOSTNAME}`)
+      - traefik.http.routers.bitwarden.tls.certresolver=selfhostedservices
+
   watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
