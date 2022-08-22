@@ -44,6 +44,17 @@ services:
       - traefik.http.routers.status.rule=Host(`${STATUS_HOSTNAME}`)
       - traefik.http.routers.status.tls.certresolver=selfhostedservices
 
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    container_name: libretranslate
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.translate.entrypoints=websecure
+      - traefik.http.routers.translate.rule=Host(`${TRANSLATE_HOSTNAME}`)
+      - traefik.http.routers.translate.tls.certresolver=selfhostedservices
+      - traefik.http.services.translate.loadbalancer.server.port=5000
+
   watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
