@@ -1,4 +1,65 @@
 services:
+  bitwarden:
+    image: vaultwarden/server:latest
+    container_name: bitwarden
+    restart: unless-stopped
+    volumes:
+      - ${BITWARDEN_PATH}:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bitwarden.entrypoints=websecure
+      - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_HOSTNAME}`)
+      - traefik.http.routers.bitwarden.tls.certresolver=selfhostedservices
+
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    container_name: ddns-updater
+    restart: unless-stopped
+    volumes:
+      - ${DDNS_UPDATER_PATH}:/updater/data
+    network_mode: bridge
+    environment:
+      CONFIG: >-
+        {
+          "settings": [
+            {
+              "provider": "njalla",
+              "domain": "`${ROOT_DOMAIN}`",
+              "host": "`${BITWARDEN_SUBDOMAIN}`",
+              "key": "`${BITWARDEN_DOMAIN_KEY}`",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "`${ROOT_DOMAIN}`",
+              "host": "`${STATUS_SUBDOMAIN}`",
+              "key": "`${STATUS_DOMAIN_KEY}`",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "`${ROOT_DOMAIN}`",
+              "host": "`${TRANSLATE_SUBDOMAIN}`",
+              "key": "`${TRANSLATE_DOMAIN_KEY}`",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            }
+          ]
+        }
+
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    container_name: libretranslate
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.translate.entrypoints=websecure
+      - traefik.http.routers.translate.rule=Host(`${TRANSLATE_HOSTNAME}`)
+      - traefik.http.routers.translate.tls.certresolver=selfhostedservices
+      - traefik.http.services.translate.loadbalancer.server.port=5000
+
   traefik:
     image: traefik:v2.8
     container_name: traefik
@@ -20,18 +81,6 @@ services:
       - ${LETSENCRYPT_PATH}:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
-  bitwarden:
-    image: vaultwarden/server:latest
-    container_name: bitwarden
-    restart: unless-stopped
-    volumes:
-      - ${BITWARDEN_PATH}:/data
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.bitwarden.entrypoints=websecure
-      - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_HOSTNAME}`)
-      - traefik.http.routers.bitwarden.tls.certresolver=selfhostedservices
-
   uptime-kuma:
     image: louislam/uptime-kuma:latest
     container_name: uptime-kuma
@@ -43,17 +92,6 @@ services:
       - traefik.http.routers.status.entrypoints=websecure
       - traefik.http.routers.status.rule=Host(`${STATUS_HOSTNAME}`)
       - traefik.http.routers.status.tls.certresolver=selfhostedservices
-
-  libretranslate:
-    image: libretranslate/libretranslate:latest
-    container_name: libretranslate
-    restart: unless-stopped
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.translate.entrypoints=websecure
-      - traefik.http.routers.translate.rule=Host(`${TRANSLATE_HOSTNAME}`)
-      - traefik.http.routers.translate.tls.certresolver=selfhostedservices
-      - traefik.http.services.translate.loadbalancer.server.port=5000
 
   watchtower:
     image: containrrr/watchtower:latest
