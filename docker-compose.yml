@@ -32,6 +32,18 @@ services:
       - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_HOSTNAME}`)
       - traefik.http.routers.bitwarden.tls.certresolver=selfhostedservices
 
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - ${STATUS_PATH}:/app/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.status.entrypoints=websecure
+      - traefik.http.routers.status.rule=Host(`${STATUS_HOSTNAME}`)
+      - traefik.http.routers.status.tls.certresolver=selfhostedservices
+
   watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
