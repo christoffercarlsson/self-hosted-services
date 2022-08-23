@@ -5,6 +5,9 @@ services:
     restart: unless-stopped
     volumes:
       - ${BITWARDEN_PATH}:/data
+    environment:
+      - SIGNUPS_ALLOWED=false
+      - INVITATIONS_ALLOWED=false
     labels:
       - traefik.enable=true
       - traefik.http.routers.bitwarden.entrypoints=websecure
