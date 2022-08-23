@@ -8,7 +8,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.bitwarden.entrypoints=websecure
-      - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_HOSTNAME}`)
+      - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_SUBDOMAIN}.${ROOT_DOMAIN}`)
       - traefik.http.routers.bitwarden.tls.certresolver=selfhostedservices
 
   ddns-updater:
@@ -24,25 +24,25 @@ services:
           "settings": [
             {
               "provider": "njalla",
-              "domain": "`${ROOT_DOMAIN}`",
-              "host": "`${BITWARDEN_SUBDOMAIN}`",
-              "key": "`${BITWARDEN_DOMAIN_KEY}`",
+              "domain": "${ROOT_DOMAIN}",
+              "host": "${BITWARDEN_SUBDOMAIN}",
+              "key": "${BITWARDEN_DOMAIN_KEY}",
               "ip_version": "ipv4",
               "provider_ip": true
             },
             {
               "provider": "njalla",
-              "domain": "`${ROOT_DOMAIN}`",
-              "host": "`${STATUS_SUBDOMAIN}`",
-              "key": "`${STATUS_DOMAIN_KEY}`",
+              "domain": "${ROOT_DOMAIN}",
+              "host": "${STATUS_SUBDOMAIN}",
+              "key": "${STATUS_DOMAIN_KEY}",
               "ip_version": "ipv4",
               "provider_ip": true
             },
             {
               "provider": "njalla",
-              "domain": "`${ROOT_DOMAIN}`",
-              "host": "`${TRANSLATE_SUBDOMAIN}`",
-              "key": "`${TRANSLATE_DOMAIN_KEY}`",
+              "domain": "${ROOT_DOMAIN}",
+              "host": "${TRANSLATE_SUBDOMAIN}",
+              "key": "${TRANSLATE_DOMAIN_KEY}",
               "ip_version": "ipv4",
               "provider_ip": true
             }
@@ -56,7 +56,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.translate.entrypoints=websecure
-      - traefik.http.routers.translate.rule=Host(`${TRANSLATE_HOSTNAME}`)
+      - traefik.http.routers.translate.rule=Host(`${TRANSLATE_SUBDOMAIN}.${ROOT_DOMAIN}`)
       - traefik.http.routers.translate.tls.certresolver=selfhostedservices
       - traefik.http.services.translate.loadbalancer.server.port=5000
 
@@ -90,7 +90,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.status.entrypoints=websecure
-      - traefik.http.routers.status.rule=Host(`${STATUS_HOSTNAME}`)
+      - traefik.http.routers.status.rule=Host(`${STATUS_SUBDOMAIN}.${ROOT_DOMAIN}`)
       - traefik.http.routers.status.tls.certresolver=selfhostedservices
 
   watchtower:
