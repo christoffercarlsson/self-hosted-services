@@ -6,8 +6,8 @@ services:
     volumes:
       - ${BITWARDEN_PATH}:/data
     environment:
-      - SIGNUPS_ALLOWED=false
-      - INVITATIONS_ALLOWED=false
+      - SIGNUPS_ALLOWED=${BITWARDEN_SIGNUPS_ALLOWED}
+      - INVITATIONS_ALLOWED=${BITWARDEN_INVITATIONS_ALLOWED}
     labels:
       - traefik.enable=true
       - traefik.http.routers.bitwarden.entrypoints=websecure
