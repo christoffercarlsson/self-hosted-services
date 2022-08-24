@@ -36,6 +36,14 @@ services:
             {
               "provider": "njalla",
               "domain": "${ROOT_DOMAIN}",
+              "host": "${JELLYFIN_SUBDOMAIN}",
+              "key": "${JELLYFIN_DOMAIN_KEY}",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "${ROOT_DOMAIN}",
               "host": "${STATUS_SUBDOMAIN}",
               "key": "${STATUS_DOMAIN_KEY}",
               "ip_version": "ipv4",
@@ -51,6 +59,23 @@ services:
             }
           ]
         }
+
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    volumes:
+      - ${JELLYFIN_CACHE_PATH}:/cache
+      - ${JELLYFIN_CONFIG_PATH}:/config
+      - ${JELLYFIN_MEDIA_PATH}:/media:ro
+    environment:
+      - JELLYFIN_PublishedServerUrl=https://${JELLYFIN_SUBDOMAIN}.${ROOT_DOMAIN}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.jellyfin.entrypoints=websecure
+      - traefik.http.routers.jellyfin.rule=Host(`${JELLYFIN_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.jellyfin.tls.certresolver=selfhostedservices
+      - traefik.http.services.jellyfin.loadbalancer.server.port=8096
 
   libretranslate:
     image: libretranslate/libretranslate:latest
