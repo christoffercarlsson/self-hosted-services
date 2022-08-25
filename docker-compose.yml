@@ -36,6 +36,14 @@ services:
             {
               "provider": "njalla",
               "domain": "${ROOT_DOMAIN}",
+              "host": "${EXCALIDRAW_SUBDOMAIN}",
+              "key": "${EXCALIDRAW_DOMAIN_KEY}",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "${ROOT_DOMAIN}",
               "host": "${JELLYFIN_SUBDOMAIN}",
               "key": "${JELLYFIN_DOMAIN_KEY}",
               "ip_version": "ipv4",
@@ -59,6 +67,16 @@ services:
             }
           ]
         }
+
+  excalidraw:
+    image: excalidraw/excalidraw:latest
+    container_name: excalidraw
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.excalidraw.entrypoints=websecure
+      - traefik.http.routers.excalidraw.rule=Host(`${EXCALIDRAW_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.excalidraw.tls.certresolver=selfhostedservices
 
   jellyfin:
     image: jellyfin/jellyfin:latest
