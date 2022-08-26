@@ -52,16 +52,16 @@ services:
             {
               "provider": "njalla",
               "domain": "${ROOT_DOMAIN}",
-              "host": "${STATUS_SUBDOMAIN}",
-              "key": "${STATUS_DOMAIN_KEY}",
+              "host": "${UPTIME_KUMA_SUBDOMAIN}",
+              "key": "${UPTIME_KUMA_DOMAIN_KEY}",
               "ip_version": "ipv4",
               "provider_ip": true
             },
             {
               "provider": "njalla",
               "domain": "${ROOT_DOMAIN}",
-              "host": "${TRANSLATE_SUBDOMAIN}",
-              "key": "${TRANSLATE_DOMAIN_KEY}",
+              "host": "${LIBRETRANSLATE_SUBDOMAIN}",
+              "key": "${LIBRETRANSLATE_DOMAIN_KEY}",
               "ip_version": "ipv4",
               "provider_ip": true
             }
@@ -101,10 +101,10 @@ services:
     restart: unless-stopped
     labels:
       - traefik.enable=true
-      - traefik.http.routers.translate.entrypoints=websecure
-      - traefik.http.routers.translate.rule=Host(`${TRANSLATE_SUBDOMAIN}.${ROOT_DOMAIN}`)
-      - traefik.http.routers.translate.tls.certresolver=selfhostedservices
-      - traefik.http.services.translate.loadbalancer.server.port=5000
+      - traefik.http.routers.libretranslate.entrypoints=websecure
+      - traefik.http.routers.libretranslate.rule=Host(`${LIBRETRANSLATE_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.libretranslate.tls.certresolver=selfhostedservices
+      - traefik.http.services.libretranslate.loadbalancer.server.port=5000
 
   traefik:
     image: traefik:v2.8
@@ -132,12 +132,12 @@ services:
     container_name: uptime-kuma
     restart: unless-stopped
     volumes:
-      - ${STATUS_PATH}:/app/data
+      - ${UPTIME_KUMA_PATH}:/app/data
     labels:
       - traefik.enable=true
-      - traefik.http.routers.status.entrypoints=websecure
-      - traefik.http.routers.status.rule=Host(`${STATUS_SUBDOMAIN}.${ROOT_DOMAIN}`)
-      - traefik.http.routers.status.tls.certresolver=selfhostedservices
+      - traefik.http.routers.uptime-kuma.entrypoints=websecure
+      - traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_KUMA_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.uptime-kuma.tls.certresolver=selfhostedservices
 
   watchtower:
     image: containrrr/watchtower:latest
