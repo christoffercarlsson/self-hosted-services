@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     depends_on:
       - traefik
+    networks:
+      - traefik
     volumes:
       - ${BITWARDEN_PATH}:/data
     environment:
@@ -84,6 +86,8 @@ services:
     restart: unless-stopped
     depends_on:
       - traefik
+    networks:
+      - traefik
     labels:
       - traefik.enable=true
       - traefik.http.routers.excalidraw.entrypoints=websecure
@@ -95,6 +99,8 @@ services:
     container_name: jellyfin
     restart: unless-stopped
     depends_on:
+      - traefik
+    networks:
       - traefik
     volumes:
       - ${JELLYFIN_CACHE_PATH}:/cache
@@ -115,6 +121,8 @@ services:
     restart: unless-stopped
     depends_on:
       - traefik
+    networks:
+      - traefik
     labels:
       - traefik.enable=true
       - traefik.http.routers.libretranslate.entrypoints=websecure
@@ -129,6 +137,9 @@ services:
     depends_on:
       - nextcloud-db
       - redis
+      - traefik
+    networks:
+      - nextcloud
       - traefik
     volumes:
       - ${NEXTCLOUD_CONFIG_PATH}:/config
@@ -156,6 +167,8 @@ services:
     image: postgres:alpine
     container_name: nextcloud-db
     restart: unless-stopped
+    networks:
+      - nextcloud
     volumes:
       - ${NEXTCLOUD_DB_PATH}:/var/lib/postgresql/data
     environment:
@@ -172,6 +185,8 @@ services:
     image: redis:alpine
     container_name: redis
     restart: unless-stopped
+    networks:
+      - nextcloud
     volumes:
       - ${REDIS_PATH}:/var/lib/redis
     healthcheck:
@@ -184,6 +199,8 @@ services:
     image: traefik:v2.8
     container_name: traefik
     restart: unless-stopped
+    networks:
+      - traefik
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
@@ -207,6 +224,8 @@ services:
     restart: unless-stopped
     depends_on:
       - traefik
+    networks:
+      - traefik
     volumes:
       - ${UPTIME_KUMA_PATH}:/app/data
     labels:
@@ -221,3 +240,9 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  nextcloud:
+    name: nextcloud
+  traefik:
+    name: traefik
