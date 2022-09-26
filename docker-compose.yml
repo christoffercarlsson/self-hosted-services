@@ -3,6 +3,8 @@ services:
     image: vaultwarden/server:latest
     container_name: bitwarden
     restart: unless-stopped
+    depends_on:
+      - traefik
     volumes:
       - ${BITWARDEN_PATH}:/data
     environment:
@@ -52,6 +54,14 @@ services:
             {
               "provider": "njalla",
               "domain": "${ROOT_DOMAIN}",
+              "host": "${NEXTCLOUD_SUBDOMAIN}",
+              "key": "${NEXTCLOUD_DOMAIN_KEY}",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "${ROOT_DOMAIN}",
               "host": "${UPTIME_KUMA_SUBDOMAIN}",
               "key": "${UPTIME_KUMA_DOMAIN_KEY}",
               "ip_version": "ipv4",
@@ -72,6 +82,8 @@ services:
     image: excalidraw/excalidraw:latest
     container_name: excalidraw
     restart: unless-stopped
+    depends_on:
+      - traefik
     labels:
       - traefik.enable=true
       - traefik.http.routers.excalidraw.entrypoints=websecure
@@ -82,6 +94,8 @@ services:
     image: jellyfin/jellyfin:latest
     container_name: jellyfin
     restart: unless-stopped
+    depends_on:
+      - traefik
     volumes:
       - ${JELLYFIN_CACHE_PATH}:/cache
       - ${JELLYFIN_CONFIG_PATH}:/config
@@ -99,12 +113,72 @@ services:
     image: libretranslate/libretranslate:latest
     container_name: libretranslate
     restart: unless-stopped
+    depends_on:
+      - traefik
     labels:
       - traefik.enable=true
       - traefik.http.routers.libretranslate.entrypoints=websecure
       - traefik.http.routers.libretranslate.rule=Host(`${LIBRETRANSLATE_SUBDOMAIN}.${ROOT_DOMAIN}`)
       - traefik.http.routers.libretranslate.tls.certresolver=selfhostedservices
       - traefik.http.services.libretranslate.loadbalancer.server.port=5000
+
+  nextcloud:
+    image: lscr.io/linuxserver/nextcloud:latest
+    container_name: nextcloud
+    restart: unless-stopped
+    depends_on:
+      - nextcloud-db
+      - redis
+      - traefik
+    volumes:
+      - ${NEXTCLOUD_CONFIG_PATH}:/config
+      - ${NEXTCLOUD_APP_PATH}:/data
+    environment:
+      - PUID=${NEXTCLOUD_PUID}
+      - PGID=${NEXTCLOUD_PGID}
+      - TZ=${NEXTCLOUD_TIMEZONE}
+    labels:
+      - traefik.enable=true
+      - traefik.http.middlewares.nextcloud.headers.browserXSSFilter=true
+      - traefik.http.middlewares.nextcloud.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.nextcloud.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.nextcloud.headers.stsPreload=true
+      - traefik.http.middlewares.nextcloud.headers.stsSeconds=155520011
+      - traefik.http.middlewares.nextcloud-redirect.redirectregex.permanent=true
+      - traefik.http.middlewares.nextcloud-redirect.redirectregex.regex=https://(.*)/.well-known/(card|cal)dav
+      - traefik.http.middlewares.nextcloud-redirect.redirectregex.replacement=https://$${1}/remote.php/dav/
+      - traefik.http.routers.nextcloud.entrypoints=websecure
+      - traefik.http.routers.nextcloud.middlewares=nextcloud,nextcloud-redirect
+      - traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.nextcloud.tls.certresolver=selfhostedservices
+
+  nextcloud-db:
+    image: postgres:alpine
+    container_name: nextcloud-db
+    restart: unless-stopped
+    volumes:
+      - ${NEXTCLOUD_DB_PATH}:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+      - POSTGRES_DB=${NEXTCLOUD_DB_NAME}
+      - POSTGRES_USER=${NEXTCLOUD_DB_USER}
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U ${NEXTCLOUD_DB_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+      - ${REDIS_PATH}:/var/lib/redis
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
   traefik:
     image: traefik:v2.8
@@ -131,6 +205,8 @@ services:
     image: louislam/uptime-kuma:latest
     container_name: uptime-kuma
     restart: unless-stopped
+    depends_on:
+      - traefik
     volumes:
       - ${UPTIME_KUMA_PATH}:/app/data
     labels:
