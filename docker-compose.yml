@@ -56,6 +56,14 @@ services:
             {
               "provider": "njalla",
               "domain": "${ROOT_DOMAIN}",
+              "host": "${LIBRETRANSLATE_SUBDOMAIN}",
+              "key": "${LIBRETRANSLATE_DOMAIN_KEY}",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "${ROOT_DOMAIN}",
               "host": "${NEXTCLOUD_SUBDOMAIN}",
               "key": "${NEXTCLOUD_DOMAIN_KEY}",
               "ip_version": "ipv4",
@@ -90,14 +98,6 @@ services:
               "domain": "${ROOT_DOMAIN}",
               "host": "${UPTIME_KUMA_SUBDOMAIN}",
               "key": "${UPTIME_KUMA_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${LIBRETRANSLATE_SUBDOMAIN}",
-              "key": "${LIBRETRANSLATE_DOMAIN_KEY}",
               "ip_version": "ipv4",
               "provider_ip": true
             }
