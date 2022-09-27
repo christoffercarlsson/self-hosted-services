@@ -318,9 +318,13 @@ services:
       - VALET_TOKEN_SECRET=${NOTES_VALET_TOKEN_SECRET}
     labels:
       - traefik.enable=true
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=Origin,X-Requested-With,Content-Type,Accept,Authorization
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=GET,POST,PUT,DELETE,OPTIONS
       - traefik.http.routers.notes-files.entrypoints=websecure
       - traefik.http.routers.notes-files.rule=Host(`${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}`)
       - traefik.http.routers.notes-files.tls.certresolver=selfhostedservices
+      - traefik.http.routers.notes-files.middlewares=cors-headers@docker
       - traefik.http.services.notes-files.loadbalancer.server.port=3000
 
   notes-gateway:
