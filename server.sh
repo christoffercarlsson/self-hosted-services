@@ -35,14 +35,17 @@ ensure_not_empty() {
 check_config_file_changes() {
   if [[ ! -f "$ENV_FILE" ]]
   then
-    echo "Could not find environment file. Please run the './server.sh setup' command and try again."
+    echo "Could not find environment file."
+    echo "Please run the './server.sh setup' command and try again."
     exit 1
   fi
   local sample_env_lines=$(wc -l "$SAMPLE_ENV_FILE" | awk '{ print $1 }')
   local env_lines=$(wc -l "$ENV_FILE" | awk '{ print $1 }')
   if [[ "$sample_env_lines" -ne "$env_lines" ]]
   then
-    echo "The environment file contains a different amount of lines than the sample file. There may be a new environment variable to configure. Please update your environment file and try again."
+    echo "The environment file contains a different amount of lines than \
+    the sample file. There may be a new environment variable to configure."
+    echo "Please update your environment file and try again."
     exit 1
   fi
 }
@@ -51,14 +54,26 @@ create_subscription() {
   ensure_not_empty "$1" "Please provide an email for the subscription."
   echo "Creating Standard Notes subscription."
   docker compose exec notes-db sh -c "MYSQL_PWD=\$MYSQL_ROOT_PASSWORD mysql \$MYSQL_DATABASE -e \
-    'INSERT INTO user_roles (role_uuid , user_uuid) VALUES ((SELECT uuid FROM roles WHERE name=\"PRO_USER\" ORDER BY version DESC limit 1) ,(SELECT uuid FROM users WHERE email=\"$1\")) ON DUPLICATE KEY UPDATE role_uuid = VALUES(role_uuid);' \
+    'INSERT INTO user_roles (role_uuid , user_uuid) VALUES (\
+    (SELECT uuid FROM roles WHERE name=\"PRO_USER\" ORDER BY version DESC limit 1), \
+    (SELECT uuid FROM users WHERE email=\"$1\")\
+    ) ON DUPLICATE KEY UPDATE role_uuid = VALUES(role_uuid);'\
   "
   ensure_last_success "Failed to create user role."
   docker compose exec notes-db sh -c "MYSQL_PWD=\$MYSQL_ROOT_PASSWORD mysql \$MYSQL_DATABASE -e \
-    'INSERT INTO user_subscriptions SET uuid=UUID(), plan_name=\"PRO_PLAN\", ends_at=8640000000000000, created_at=0, updated_at=0, user_uuid=(SELECT uuid FROM users WHERE email=\"$1\"), subscription_id=1, subscription_type=\"regular\";' \
+    'INSERT INTO user_subscriptions SET \
+    uuid=UUID(), \
+    plan_name=\"PRO_PLAN\", \
+    ends_at=8640000000000000, \
+    created_at=0, \
+    updated_at=0, \
+    user_uuid=(SELECT uuid FROM users WHERE email=\"$1\"), \
+    subscription_id=1, \
+    subscription_type=\"regular\";'\
   "
-  ensure_last_success "Failed to create subscription."
-  echo "Subscription successfully created. Please consider donating to Standard Notes if you do not plan on purchasing a subscription."
+  ensure_last_success "Failed to create user subscription."
+  echo "Subscription successfully created."
+  echo "Please consider donating to Standard Notes if you do not plan on purchasing a subscription."
 }
 
 set_placeholder() {
@@ -137,7 +152,8 @@ start_services() {
   echo "Starting up infrastructure."
   docker compose up -d
   ensure_last_success "Failed to start infrastructure."
-  echo "Infrastructure started. Give it a moment to warm up. Run the './server.sh logs' command to see details."
+  echo "Infrastructure started. Give it a moment to warm up."
+  echo "Run the './server.sh logs' command to see details."
 }
 
 stop_services() {
@@ -184,7 +200,8 @@ case "$1" in
     stop_services
     pull_git_changes
     pull_images
-    echo "Infrastructure up to date. Run the './server.sh start' command to bring it back up."
+    echo "Infrastructure up to date."
+    echo "Run the './server.sh start' command to bring it back up."
     ;;
   *)
     echo "Unknown command"
