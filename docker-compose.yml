@@ -218,15 +218,14 @@ services:
       - DASHBOARD_URL=http://standardnotes.com/dashboard
       - DEFAULT_SYNC_SERVER=https://${NOTES_SYNC_SUBDOMAIN}.${ROOT_DOMAIN}
       - PLANS_URL=https://standardnotes.com/plans
-      - PORT=3001
       - PURCHASE_URL=https://standardnotes.com/purchase
       - SECRET_KEY_BASE=${NOTES_SECRET_KEY_BASE}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.notes-gateway.entrypoints=websecure
-      - traefik.http.routers.notes-gateway.rule=Host(`${NOTES_SUBDOMAIN}.${ROOT_DOMAIN}`)
-      - traefik.http.routers.notes-gateway.tls.certresolver=selfhostedservices
-      - traefik.http.services.notes-gateway.loadbalancer.server.port=3001
+      - traefik.http.routers.notes.entrypoints=websecure
+      - traefik.http.routers.notes.rule=Host(`${NOTES_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.notes.tls.certresolver=selfhostedservices
+      - traefik.http.services.notes.loadbalancer.server.port=3000
 
   notes-auth:
     image: standardnotes/auth:latest
@@ -451,6 +450,7 @@ services:
       - traefik.http.routers.uptime-kuma.entrypoints=websecure
       - traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_KUMA_SUBDOMAIN}.${ROOT_DOMAIN}`)
       - traefik.http.routers.uptime-kuma.tls.certresolver=selfhostedservices
+      - traefik.http.services.uptime-kuma.loadbalancer.server.port=3001
 
   watchtower:
     image: containrrr/watchtower:latest
