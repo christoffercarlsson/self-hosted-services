@@ -149,6 +149,7 @@ setup() {
 }
 
 start_services() {
+  check_config_file_changes
   echo "Starting up infrastructure."
   docker compose up -d
   ensure_last_success "Failed to start infrastructure."
@@ -175,12 +176,18 @@ pull_images() {
   ensure_last_success "Failed to download latest images."
 }
 
+update_services() {
+  stop_services
+  pull_git_changes
+  pull_images
+  start_services
+}
+
 case "$1" in
   "create-subscription" | "create_subscription")
     create_subscription $2
     ;;
   "domain-key" | "domain_key" | "set-domain-key" | "set_domain_key")
-    check_config_file_changes
     set_domain_key $2 $3
     ;;
   "logs")
@@ -190,18 +197,13 @@ case "$1" in
     setup $2 $3 $4
     ;;
   "start")
-    check_config_file_changes
     start_services
     ;;
   "stop")
     stop_services
     ;;
   "update")
-    stop_services
-    pull_git_changes
-    pull_images
-    echo "Infrastructure up to date."
-    echo "Run the './server.sh start' command to bring it back up."
+    update_services
     ;;
   *)
     echo "Unknown command"
