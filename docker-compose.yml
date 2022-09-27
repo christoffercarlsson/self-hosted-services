@@ -209,6 +209,8 @@ services:
     image: standardnotes/web:stable
     container_name: notes
     restart: unless-stopped
+    depends_on:
+      - notes-gateway
     networks:
       - traefik
     environment:
