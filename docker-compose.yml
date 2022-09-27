@@ -211,6 +211,7 @@ services:
     restart: unless-stopped
     depends_on:
       - notes-gateway
+      - traefik
     networks:
       - traefik
     environment:
@@ -306,6 +307,7 @@ services:
     depends_on:
       - notes-db
       - redis
+      - traefik
     networks:
       - notes
       - traefik
@@ -330,6 +332,7 @@ services:
       - notes-auth
       - notes-sync
       - redis
+      - traefik
     networks:
       - notes
       - traefik
@@ -412,6 +415,8 @@ services:
     image: traefik:v2.8
     container_name: traefik
     restart: unless-stopped
+    depends_on:
+      - ddns-updater
     networks:
       - traefik
     command:
