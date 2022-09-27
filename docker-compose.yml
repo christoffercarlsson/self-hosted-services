@@ -344,9 +344,13 @@ services:
       - SYNCING_SERVER_JS_URL=http://notes-sync:3000
     labels:
       - traefik.enable=true
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=Origin,X-Requested-With,Content-Type,Accept,Authorization
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=GET,POST,PUT,DELETE,OPTIONS
       - traefik.http.routers.notes-gateway.entrypoints=websecure
       - traefik.http.routers.notes-gateway.rule=Host(`${NOTES_SYNC_SUBDOMAIN}.${ROOT_DOMAIN}`)
       - traefik.http.routers.notes-gateway.tls.certresolver=selfhostedservices
+      - traefik.http.routers.notes-gateway.middlewares=cors-headers@docker
       - traefik.http.services.notes-gateway.loadbalancer.server.port=3000
 
   notes-sync:
