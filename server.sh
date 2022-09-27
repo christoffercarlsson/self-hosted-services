@@ -133,11 +133,38 @@ setup() {
   echo "Default configuration file created. Feel free to modify values as needed."
 }
 
+start_services() {
+  echo "Starting up infrastructure."
+  docker compose up -d
+  ensure_last_success "Failed to start infrastructure."
+  echo "Infrastructure started. Give it a moment to warm up. Run the './server.sh logs' command to see details."
+}
+
+stop_services() {
+  echo "Stopping all services."
+  docker compose kill || true
+  ensure_last_success "Failed to stop services."
+  echo "Services stopped."
+}
+
+pull_git_changes() {
+  echo "Pulling changes from Git."
+  git pull origin $(git rev-parse --abbrev-ref HEAD)
+  ensure_last_success "Failed to pull latest changes from Git."
+}
+
+pull_images() {
+  echo "Downloading latest images."
+  docker compose pull
+  ensure_last_success "Failed to download latest images."
+}
+
 case "$1" in
   "create-subscription" | "create_subscription")
     create_subscription $2
     ;;
   "domain-key" | "domain_key" | "set-domain-key" | "set_domain_key")
+    check_config_file_changes
     set_domain_key $2 $3
     ;;
   "logs")
@@ -148,22 +175,15 @@ case "$1" in
     ;;
   "start")
     check_config_file_changes
-    echo "Starting up infrastructure."
-    docker compose up -d
-    echo "Infrastructure started. Give it a moment to warm up. Run the './server.sh logs' command to see details."
+    start_services
     ;;
   "stop")
-    echo "Stopping all services."
-    docker compose kill || true
-    echo "Services stopped."
+    stop_services
     ;;
   "update")
-    echo "Stopping all services."
-    docker compose kill || true
-    echo "Pulling changes from Git."
-    git pull origin $(git rev-parse --abbrev-ref HEAD)
-    echo "Downloading latest images."
-    docker compose pull
+    stop_services
+    pull_git_changes
+    pull_images
     echo "Infrastructure up to date. Run the './server.sh start' command to bring it back up."
     ;;
   *)
