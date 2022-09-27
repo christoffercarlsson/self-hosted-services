@@ -64,6 +64,30 @@ services:
             {
               "provider": "njalla",
               "domain": "${ROOT_DOMAIN}",
+              "host": "${NOTES_SUBDOMAIN}",
+              "key": "${NOTES_DOMAIN_KEY}",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "${ROOT_DOMAIN}",
+              "host": "${NOTES_FILES_SUBDOMAIN}",
+              "key": "${NOTES_FILES_DOMAIN_KEY}",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "${ROOT_DOMAIN}",
+              "host": "${NOTES_SYNC_SUBDOMAIN}",
+              "key": "${NOTES_SYNC_DOMAIN_KEY}",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "${ROOT_DOMAIN}",
               "host": "${UPTIME_KUMA_SUBDOMAIN}",
               "key": "${UPTIME_KUMA_DOMAIN_KEY}",
               "ip_version": "ipv4",
@@ -172,8 +196,8 @@ services:
     volumes:
       - ${NEXTCLOUD_DB_PATH}:/var/lib/postgresql/data
     environment:
+      - POSTGRES_DB=${NEXTCLOUD_DB_DATABASE}
       - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
-      - POSTGRES_DB=${NEXTCLOUD_DB_NAME}
       - POSTGRES_USER=${NEXTCLOUD_DB_USER}
     healthcheck:
       test: [CMD-SHELL, 'pg_isready -U ${NEXTCLOUD_DB_USER}']
@@ -181,14 +205,199 @@ services:
       timeout: 5s
       retries: 5
 
+  notes:
+    image: standardnotes/web:stable
+    container_name: notes
+    restart: unless-stopped
+    networks:
+      - traefik
+    environment:
+      - DASHBOARD_URL=http://standardnotes.com/dashboard
+      - DEFAULT_SYNC_SERVER=https://${NOTES_SYNC_SUBDOMAIN}.${ROOT_DOMAIN}
+      - PLANS_URL=https://standardnotes.com/plans
+      - PORT=3001
+      - PURCHASE_URL=https://standardnotes.com/purchase
+      - SECRET_KEY_BASE=${NOTES_SECRET_KEY_BASE}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.notes-gateway.entrypoints=websecure
+      - traefik.http.routers.notes-gateway.rule=Host(`${NOTES_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.notes-gateway.tls.certresolver=selfhostedservices
+      - traefik.http.services.notes-gateway.loadbalancer.server.port=3001
+
+  notes-auth:
+    image: standardnotes/auth:latest
+    container_name: notes-auth
+    restart: unless-stopped
+    depends_on:
+      - notes-db
+      - redis
+    networks:
+      - notes
+    entrypoint: [./packages/auth/docker/entrypoint.sh, start-web]
+    env_file:
+      - notes/base.env
+      - notes/auth.env
+      - notes/db.env
+    environment:
+      - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
+      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - DB_PASSWORD=${NOTES_DB_PASSWORD}
+      - DB_USERNAME=${NOTES_DB_USER}
+      - DISABLE_USER_REGISTRATION=${NOTES_DISABLE_USER_REGISTRATION}
+      - ENCRYPTION_SERVER_KEY=${NOTES_ENCRYPTION_SERVER_KEY}
+      - JWT_SECRET=${NOTES_JWT_SECRET}
+      - LEGACY_JWT_SECRET=${NOTES_LEGACY_JWT_SECRET}
+      - PSEUDO_KEY_PARAMS_KEY=${NOTES_PSEUDO_KEY_PARAMS_KEY}
+      - VALET_TOKEN_SECRET=${NOTES_VALET_TOKEN_SECRET}
+
+  notes-auth-worker:
+    image: standardnotes/auth:latest
+    container_name: notes-auth
+    restart: unless-stopped
+    depends_on:
+      - notes-auth
+      - notes-db
+      - redis
+    networks:
+      - notes
+    entrypoint: [./packages/auth/docker/entrypoint.sh, start-worker]
+    env_file:
+      - notes/base.env
+      - notes/auth.env
+      - notes/db.env
+    environment:
+      - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
+      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - DB_PASSWORD=${NOTES_DB_PASSWORD}
+      - DB_USERNAME=${NOTES_DB_USER}
+      - DISABLE_USER_REGISTRATION=${NOTES_DISABLE_USER_REGISTRATION}
+      - ENCRYPTION_SERVER_KEY=${NOTES_ENCRYPTION_SERVER_KEY}
+      - JWT_SECRET=${NOTES_JWT_SECRET}
+      - LEGACY_JWT_SECRET=${NOTES_LEGACY_JWT_SECRET}
+      - PSEUDO_KEY_PARAMS_KEY=${NOTES_PSEUDO_KEY_PARAMS_KEY}
+      - VALET_TOKEN_SECRET=${NOTES_VALET_TOKEN_SECRET}
+
+  notes-db:
+    image: mysql:5.6
+    container_name: notes-db
+    restart: unless-stopped
+    networks:
+      - notes
+    volumes:
+      - ${NOTES_DATA_PATH}:/var/lib/mysql
+      - ${NOTES_DATA_IMPORT_PATH}:/docker-entrypoint-initdb.d
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8
+      - --collation-server=utf8_general_ci
+    environment:
+      - MYSQL_DATABASE=${NOTES_DB_DATABASE}
+      - MYSQL_PASSWORD=${NOTES_DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${NOTES_DB_PASSWORD}
+      - MYSQL_USER=${NOTES_DB_USER}
+
+  notes-files:
+    image: standardnotes/files:latest
+    container_name: notes-files
+    restart: unless-stopped
+    depends_on:
+      - notes-db
+      - redis
+    networks:
+      - notes
+      - traefik
+    entrypoint: [./packages/files/docker/entrypoint.sh, start-web]
+    env_file: notes/base.env
+    environment:
+      - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
+      - MAX_CHUNK_BYTES={NOTES_FILE_MAX_UPLOAD_BYTES}
+      - VALET_TOKEN_SECRET=${NOTES_VALET_TOKEN_SECRET}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.notes-files.entrypoints=websecure
+      - traefik.http.routers.notes-files.rule=Host(`${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.notes-files.tls.certresolver=selfhostedservices
+      - traefik.http.services.notes-files.loadbalancer.server.port=3000
+
+  notes-gateway:
+    image: standardnotes/api-gateway:latest
+    container_name: notes-gateway
+    restart: unless-stopped
+    depends_on:
+      - notes-auth
+      - notes-sync
+      - redis
+    networks:
+      - notes
+      - traefik
+    entrypoint: [./packages/api-gateway/docker/entrypoint.sh, start-web]
+    env_file: notes/base.env
+    environment:
+      - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
+      - FILES_SERVER_URL=https://${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.notes-gateway.entrypoints=websecure
+      - traefik.http.routers.notes-gateway.rule=Host(`${NOTES_SYNC_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.notes-gateway.tls.certresolver=selfhostedservices
+      - traefik.http.services.notes-gateway.loadbalancer.server.port=3000
+
+  notes-sync:
+    image: standardnotes/syncing-server-js:latest
+    container_name: notes-sync
+    restart: unless-stopped
+    depends_on:
+      - notes-db
+      - redis
+    networks:
+      - notes
+    entrypoint: [./packages/syncing-server/docker/entrypoint.sh, start-web]
+    env_file:
+      - notes/base.env
+      - notes/db.env
+      - notes/sync.env
+    environment:
+      - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
+      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - DB_PASSWORD=${NOTES_DB_PASSWORD}
+      - DB_USERNAME=${NOTES_DB_USER}
+      - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
+      - FILES_SERVER_URL=https://${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}
+
+  notes-sync-worker:
+    image: standardnotes/syncing-server-js:latest
+    container_name: notes-sync-worker
+    restart: unless-stopped
+    depends_on:
+      - notes-db
+      - notes-sync
+      - redis
+    networks:
+      - notes
+    entrypoint: [./packages/syncing-server/docker/entrypoint.sh, start-worker]
+    env_file:
+      - notes/base.env
+      - notes/db.env
+      - notes/sync.env
+    environment:
+      - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
+      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - DB_PASSWORD=${NOTES_DB_PASSWORD}
+      - DB_USERNAME=${NOTES_DB_USER}
+      - FILES_SERVER_URL=https://${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}
+      - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
+
   redis:
     image: redis:alpine
     container_name: redis
     restart: unless-stopped
     networks:
       - nextcloud
+      - notes
     volumes:
-      - ${REDIS_PATH}:/var/lib/redis
+      - ${NEXTCLOUD_REDIS_PATH}:/var/lib/redis
+      - ${NOTES_REDIS_PATH}:/data
     healthcheck:
       test: [CMD, redis-cli, ping]
       interval: 1s
@@ -244,5 +453,7 @@ services:
 networks:
   nextcloud:
     name: nextcloud
+  notes:
+    name: notes
   traefik:
     name: traefik
