@@ -187,6 +187,7 @@ services:
       - traefik.http.routers.nextcloud.middlewares=nextcloud,nextcloud-redirect
       - traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_SUBDOMAIN}.${ROOT_DOMAIN}`)
       - traefik.http.routers.nextcloud.tls.certresolver=selfhostedservices
+      - traefik.http.services.nextcloud.loadbalancer.server.port=443
       - traefik.http.services.nextcloud.loadbalancer.server.scheme=https
 
   nextcloud-db:
