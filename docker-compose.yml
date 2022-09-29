@@ -48,6 +48,14 @@ services:
             {
               "provider": "njalla",
               "domain": "${ROOT_DOMAIN}",
+              "host": "${GHOST_SUBDOMAIN}",
+              "key": "${GHOST_DOMAIN_KEY}",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "${ROOT_DOMAIN}",
               "host": "${JELLYFIN_SUBDOMAIN}",
               "key": "${JELLYFIN_DOMAIN_KEY}",
               "ip_version": "ipv4",
@@ -117,6 +125,48 @@ services:
       - traefik.http.routers.excalidraw.entrypoints=websecure
       - traefik.http.routers.excalidraw.rule=Host(`${EXCALIDRAW_SUBDOMAIN}.${ROOT_DOMAIN}`)
       - traefik.http.routers.excalidraw.tls.certresolver=selfhostedservices
+
+  ghost:
+    image: ghost:alpine
+    container_name: ghost
+    restart: unless-stopped
+    depends_on:
+      - ghost-db
+      - traefik
+    networks:
+      - ghost
+      - traefik
+    volumes:
+      - ${GHOST_CONTENT_PATH}:/var/lib/ghost/content
+    environment:
+      - database__client=mysql
+      - database__connection__host=ghost-db
+      - database__connection__user=${GHOST_DB_USER}
+      - database__connection__password=${GHOST_DB_PASSWORD}
+      - database__connection__database=${GHOST_DB_DATABASE}
+      # - url=https://${GHOST_SUBDOMAIN}.${ROOT_DOMAIN}
+      - url=https://${ROOT_DOMAIN}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.ghost.entrypoints=websecure
+      # - traefik.http.routers.ghost.rule=Host(`${GHOST_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.ghost.rule=Host(`${ROOT_DOMAIN}`)
+      - traefik.http.routers.ghost.tls.certresolver=selfhostedservices
+      - traefik.http.services.ghost.loadbalancer.server.port=2368
+
+  ghost-db:
+    image: mariadb:latest
+    container_name: ghost-db
+    restart: unless-stopped
+    networks:
+      - ghost
+    volumes:
+      - ${GHOST_DB_PATH}:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${GHOST_DB_DATABASE}
+      - MYSQL_PASSWORD=${GHOST_DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${GHOST_DB_PASSWORD}
+      - MYSQL_USER=${GHOST_DB_USER}
 
   jellyfin:
     image: jellyfin/jellyfin:latest

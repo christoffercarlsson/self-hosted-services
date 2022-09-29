@@ -100,6 +100,7 @@ set_secret() {
 }
 
 set_secrets() {
+  set_secret "GHOST_DB_PASSWORD"
   set_secret "NEXTCLOUD_DB_PASSWORD"
   set_secret "NOTES_AUTH_JWT_SECRET"
   set_secret "NOTES_DB_PASSWORD"
@@ -122,6 +123,8 @@ set_paths() {
   set_placeholder "LETSENCRYPT_PATH" "$path/letsencrypt"
   set_placeholder "DDNS_UPDATER_PATH" "$path/ddns-updater"
   set_placeholder "BITWARDEN_PATH" "$path/bitwarden"
+  set_placeholder "GHOST_CONTENT_PATH" "$path/ghost/content"
+  set_placeholder "GHOST_DB_PATH" "$path/ghost/db"
   set_placeholder "JELLYFIN_CACHE_PATH" "$path/jellyfin/cache"
   set_placeholder "JELLYFIN_CONFIG_PATH" "$path/jellyfin/config"
   set_placeholder "JELLYFIN_MEDIA_PATH" "$path/jellyfin/media"
