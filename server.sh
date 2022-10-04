@@ -185,7 +185,7 @@ update_services() {
   pull_git_changes
   check_config_file_changes
   pull_images
-  start_services
+  echo "Infrastructure updated."
 }
 
 case "$1" in
@@ -197,6 +197,10 @@ case "$1" in
     ;;
   "logs")
     docker compose logs -f
+    ;;
+  "restart")
+    stop_services
+    start_services
     ;;
   "status")
     docker compose ps
