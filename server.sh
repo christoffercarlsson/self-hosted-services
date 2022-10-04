@@ -182,6 +182,7 @@ pull_images() {
 update_services() {
   stop_services
   pull_git_changes
+  check_config_file_changes
   pull_images
   start_services
 }
@@ -195,6 +196,9 @@ case "$1" in
     ;;
   "logs")
     docker compose logs -f
+    ;;
+  "status")
+    docker compose ps
     ;;
   "setup")
     setup $2 $3 $4
