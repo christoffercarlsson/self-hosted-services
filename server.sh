@@ -121,6 +121,7 @@ set_paths() {
     path=$(realpath -s $1)
   fi
   set_placeholder "LETSENCRYPT_PATH" "$path/letsencrypt"
+  set_placeholder "CONDUIT_PATH" "$path/conduit"
   set_placeholder "DDNS_UPDATER_PATH" "$path/ddns-updater"
   set_placeholder "BITWARDEN_PATH" "$path/bitwarden"
   set_placeholder "GHOST_CONTENT_PATH" "$path/ghost/content"

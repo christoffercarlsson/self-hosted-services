@@ -18,6 +18,65 @@ services:
       - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_SUBDOMAIN}.${ROOT_DOMAIN}`)
       - traefik.http.routers.bitwarden.tls.certresolver=selfhostedservices
 
+  conduit:
+    image: matrixconduit/matrix-conduit:latest
+    container_name: conduit
+    restart: unless-stopped
+    user: root
+    depends_on:
+      - traefik
+    networks:
+      - traefik
+    volumes:
+      - ${CONDUIT_PATH}:/var/lib/matrix-conduit
+    environment:
+      - CONDUIT_ADDRESS=0.0.0.0
+      - CONDUIT_ALLOW_ENCRYPTION=${CONDUIT_ALLOW_ENCRYPTION}
+      - CONDUIT_ALLOW_FEDERATION=${CONDUIT_ALLOW_FEDERATION}
+      - CONDUIT_ALLOW_REGISTRATION=${CONDUIT_ALLOW_REGISTRATION}
+      - CONDUIT_CONFIG=''
+      - CONDUIT_DATABASE_BACKEND=rocksdb
+      - CONDUIT_DATABASE_PATH=/var/lib/matrix-conduit
+      - CONDUIT_MAX_REQUEST_SIZE=${CONDUIT_MAX_REQUEST_SIZE}
+      - CONDUIT_PORT=6167
+      - CONDUIT_SERVER_NAME=${CONDUIT_SUBDOMAIN}.${ROOT_DOMAIN}
+      - CONDUIT_TRUSTED_SERVERS=${CONDUIT_TRUSTED_SERVERS}
+    labels:
+      - traefik.enable=true
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
+      - traefik.http.routers.conduit.entrypoints=websecure
+      - traefik.http.routers.conduit.rule=Host(`${CONDUIT_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.conduit.tls.certresolver=selfhostedservices
+      - traefik.http.routers.conduit.middlewares=cors-headers
+      - traefik.http.services.conduit.loadbalancer.server.port=6167
+
+  conduit-well-known:
+    image: nginx:latest
+    container_name: conduit-well-known
+    restart: unless-stopped
+    depends_on:
+      - traefik
+    networks:
+      - traefik
+    volumes:
+      - ./conduit/well-known.conf:/etc/nginx/conf.d/matrix.conf
+    environment:
+      - CONDUIT_HOSTNAME=${CONDUIT_SUBDOMAIN}.${ROOT_DOMAIN}
+    labels:
+      - traefik.enable=true
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
+      - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
+      - traefik.http.routers.conduit-well-known.entrypoints=websecure
+      # - 'traefik.http.routers.conduit-well-known.rule=Host(`${CONDUIT_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      #   && PathPrefix(`/.well-known/matrix`)'
+      - 'traefik.http.routers.conduit-well-known.rule=Host(`${ROOT_DOMAIN}`) &&
+        PathPrefix(`/.well-known/matrix`)'
+      - traefik.http.routers.conduit-well-known.tls.certresolver=selfhostedservices
+      - traefik.http.routers.conduit-well-known.middlewares=cors-headers
+
   ddns-updater:
     image: qmcgaw/ddns-updater
     container_name: ddns-updater
@@ -34,6 +93,14 @@ services:
               "domain": "${ROOT_DOMAIN}",
               "host": "${BITWARDEN_SUBDOMAIN}",
               "key": "${BITWARDEN_DOMAIN_KEY}",
+              "ip_version": "ipv4",
+              "provider_ip": true
+            },
+            {
+              "provider": "njalla",
+              "domain": "${ROOT_DOMAIN}",
+              "host": "${CONDUIT_SUBDOMAIN}",
+              "key": "${CONDUIT_DOMAIN_KEY}",
               "ip_version": "ipv4",
               "provider_ip": true
             },
