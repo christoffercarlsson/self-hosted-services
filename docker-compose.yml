@@ -590,6 +590,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
+  ghost:
+    name: ghost
   nextcloud:
     name: nextcloud
   notes:
