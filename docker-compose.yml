@@ -63,12 +63,11 @@ services:
     networks:
       - traefik
     volumes:
-      - ./conduit/well-known.template.conf:/etc/nginx/conf.d/conduit-well-known.template.conf
+      - ./conduit/well-known.template:/etc/nginx/conf.d/conduit-well-known.template
     environment:
       - CONDUIT_HOSTNAME=${CONDUIT_SUBDOMAIN}.${ROOT_DOMAIN}
     command:
-      /bin/bash -c "envsubst <
-      /etc/nginx/conf.d/conduit-well-known.template.conf >
+      /bin/bash -c "envsubst < /etc/nginx/conf.d/conduit-well-known.template >
       /etc/nginx/conf.d/conduit-well-known.conf && nginx -g 'daemon off;'"
     labels:
       - traefik.enable=true
