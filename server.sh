@@ -137,6 +137,7 @@ set_paths() {
   set_placeholder "NOTES_DATA_IMPORT_PATH" "$path/notes/data/import"
   set_placeholder "NOTES_FILE_UPLOAD_PATH" "$path/notes/data/uploads"
   set_placeholder "NOTES_REDIS_PATH" "$path/notes/redis"
+  set_placeholder "PROTONMAIL_PATH" "$path/protonmail"
   set_placeholder "UPTIME_KUMA_PATH" "$path/uptime-kuma"
 }
 

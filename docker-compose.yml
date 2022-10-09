@@ -6,6 +6,7 @@ services:
     depends_on:
       - traefik
     networks:
+      - protonmail
       - traefik
     volumes:
       - ${BITWARDEN_PATH}:/data
@@ -202,6 +203,7 @@ services:
       - traefik
     networks:
       - ghost
+      - protonmail
       - traefik
     volumes:
       - ${GHOST_CONTENT_PATH}:/var/lib/ghost/content
@@ -277,10 +279,12 @@ services:
     restart: unless-stopped
     depends_on:
       - nextcloud-db
+      - protonmail
       - redis
       - traefik
     networks:
       - nextcloud
+      - protonmail
       - traefik
     volumes:
       - ${NEXTCLOUD_CONFIG_PATH}:/config
@@ -522,6 +526,15 @@ services:
       - FILES_SERVER_URL=https://${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}
       - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
 
+  protonmail:
+    image: ghcr.io/christoffercarlsson/protonmail-bridge:2.3.0
+    container_name: protonmail
+    restart: unless-stopped
+    networks:
+      - protonmail
+    volumes:
+      - ${PROTONMAIL_PATH}:/root
+
   redis:
     image: redis:alpine
     container_name: redis
@@ -596,5 +609,7 @@ networks:
     name: nextcloud
   notes:
     name: notes
+  protonmail:
+    name: protonmail
   traefik:
     name: traefik
