@@ -203,6 +203,9 @@ case "$1" in
     stop_services
     start_services
     ;;
+  "secret" | "set-secret" | "set_secret")
+    set_secret $2
+    ;;
   "status")
     docker compose ps
     ;;
