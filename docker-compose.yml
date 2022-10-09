@@ -4,6 +4,7 @@ services:
     container_name: bitwarden
     restart: unless-stopped
     depends_on:
+      - protonmail
       - traefik
     networks:
       - protonmail
@@ -200,6 +201,7 @@ services:
     restart: unless-stopped
     depends_on:
       - ghost-db
+      - protonmail
       - traefik
     networks:
       - ghost
