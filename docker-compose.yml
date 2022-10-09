@@ -63,9 +63,13 @@ services:
     networks:
       - traefik
     volumes:
-      - ./conduit/well-known.conf:/etc/nginx/conf.d/matrix.conf
+      - ./conduit/well-known.template.conf:/etc/nginx/conf.d/conduit-well-known.template.conf
     environment:
       - CONDUIT_HOSTNAME=${CONDUIT_SUBDOMAIN}.${ROOT_DOMAIN}
+    command:
+      /bin/bash -c "envsubst <
+      /etc/nginx/conf.d/conduit-well-known.template.conf >
+      /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     labels:
       - traefik.enable=true
       - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
