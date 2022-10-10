@@ -209,6 +209,9 @@ case "$1" in
   "secret" | "set-secret" | "set_secret")
     set_secret $2
     ;;
+  "secrets" | "set-secrets" | "set_secrets")
+    set_secrets
+    ;;
   "status")
     docker compose ps
     ;;
