@@ -475,6 +475,7 @@ services:
       - AUTH_SERVER_URL=http://notes-auth:3000
       - FILES_SERVER_URL=https://${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}
       - SYNCING_SERVER_JS_URL=http://notes-sync:3000
+      - WORKSPACE_SERVER_URL=http://notes-workspace:3000
     labels:
       - traefik.enable=true
       - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
@@ -528,8 +529,47 @@ services:
       - DB_DATABASE=${NOTES_DB_DATABASE}
       - DB_PASSWORD=${NOTES_DB_PASSWORD}
       - DB_USERNAME=${NOTES_DB_USER}
-      - FILES_SERVER_URL=https://${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}
       - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
+      - FILES_SERVER_URL=https://${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}
+
+  notes-workspace:
+    image: standardnotes/workspace:latest
+    container_name: notes-workspace
+    restart: unless-stopped
+    depends_on:
+      - notes-db
+      - redis
+    networks:
+      - notes
+    entrypoint: [./packages/workspace/docker/entrypoint.sh, start-web]
+    env_file:
+      - notes/base.env
+      - notes/db.env
+    environment:
+      - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
+      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - DB_PASSWORD=${NOTES_DB_PASSWORD}
+      - DB_USERNAME=${NOTES_DB_USER}
+
+  notes-workspace-worker:
+    image: standardnotes/workspace:latest
+    container_name: notes-workspace-worker
+    restart: unless-stopped
+    depends_on:
+      - notes-db
+      - notes-workspace
+      - redis
+    networks:
+      - notes
+    entrypoint: [./packages/workspace/docker/entrypoint.sh, start-worker]
+    env_file:
+      - notes/base.env
+      - notes/db.env
+    environment:
+      - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
+      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - DB_PASSWORD=${NOTES_DB_PASSWORD}
+      - DB_USERNAME=${NOTES_DB_USER}
 
   protonmail:
     image: ghcr.io/christoffercarlsson/protonmail-bridge:2.3.0
