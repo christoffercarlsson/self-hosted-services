@@ -197,7 +197,7 @@ case "$1" in
     set_domain_key $2 $3
     ;;
   "logs")
-    docker compose logs -f
+    docker compose logs $2 -f
     ;;
   "restart")
     stop_services
