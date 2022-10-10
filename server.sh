@@ -199,6 +199,9 @@ case "$1" in
   "logs")
     docker compose logs $2 -f
     ;;
+  "path" | "paths" | "set-path" | "set_path" | "set-paths" | "set_paths")
+    set_paths $2
+    ;;
   "restart")
     stop_services
     start_services
