@@ -1,7 +1,5 @@
 #!/bin/bash
 
-DEFAULT_PATH="$HOME/.self-hosted-services"
-
 SCRIPT_DIRECTORY=$(realpath -s $(dirname $0))
 ENV_FILE="$SCRIPT_DIRECTORY/.env"
 SAMPLE_ENV_FILE="$SCRIPT_DIRECTORY/sample.env"
@@ -112,35 +110,6 @@ set_secrets() {
   set_secret "NOTES_VALET_TOKEN_SECRET"
 }
 
-set_paths() {
-  local path
-  if [[ -z "$1" ]]
-  then
-    path=$DEFAULT_PATH
-  else
-    path=$(realpath -s $1)
-  fi
-  set_placeholder "LETSENCRYPT_PATH" "$path/letsencrypt"
-  set_placeholder "CONDUIT_PATH" "$path/conduit"
-  set_placeholder "DDNS_UPDATER_PATH" "$path/ddns-updater"
-  set_placeholder "BITWARDEN_PATH" "$path/bitwarden"
-  set_placeholder "GHOST_CONTENT_PATH" "$path/ghost/content"
-  set_placeholder "GHOST_DB_PATH" "$path/ghost/db"
-  set_placeholder "JELLYFIN_CACHE_PATH" "$path/jellyfin/cache"
-  set_placeholder "JELLYFIN_CONFIG_PATH" "$path/jellyfin/config"
-  set_placeholder "JELLYFIN_MEDIA_PATH" "$path/jellyfin/media"
-  set_placeholder "NEXTCLOUD_APP_PATH" "$path/nextcloud/app"
-  set_placeholder "NEXTCLOUD_CONFIG_PATH" "$path/nextcloud/config"
-  set_placeholder "NEXTCLOUD_DB_PATH" "$path/nextcloud/db"
-  set_placeholder "NEXTCLOUD_REDIS_PATH" "$path/nextcloud/redis"
-  set_placeholder "NOTES_DATA_PATH" "$path/notes/data/mysql"
-  set_placeholder "NOTES_DATA_IMPORT_PATH" "$path/notes/data/import"
-  set_placeholder "NOTES_FILE_UPLOAD_PATH" "$path/notes/data/uploads"
-  set_placeholder "NOTES_REDIS_PATH" "$path/notes/redis"
-  set_placeholder "PROTONMAIL_PATH" "$path/protonmail"
-  set_placeholder "UPTIME_KUMA_PATH" "$path/uptime-kuma"
-}
-
 setup() {
   ensure_not_empty "$1" "Please provide a root domain name."
   ensure_not_empty "$2" "Please provide an email address for Let's Encrypt."
@@ -148,7 +117,6 @@ setup() {
   copy_env_file
   set_root_domain $1
   set_letsencrypt_email $2
-  set_paths $3
   set_secrets
   echo "Default configuration file created. Feel free to modify values as needed."
 }
@@ -199,9 +167,6 @@ case "$1" in
   "logs")
     docker compose logs $2 -f
     ;;
-  "path" | "paths" | "set-path" | "set_path" | "set-paths" | "set_paths")
-    set_paths $2
-    ;;
   "restart")
     stop_services
     start_services
@@ -216,7 +181,7 @@ case "$1" in
     docker compose ps
     ;;
   "setup")
-    setup $2 $3 $4
+    setup $2 $3
     ;;
   "start")
     start_services

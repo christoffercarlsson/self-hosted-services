@@ -10,7 +10,7 @@ services:
       - protonmail
       - traefik
     volumes:
-      - ${BITWARDEN_PATH}:/data
+      - bitwarden:/data
     environment:
       - SIGNUPS_ALLOWED=${BITWARDEN_SIGNUPS_ALLOWED}
       - INVITATIONS_ALLOWED=${BITWARDEN_INVITATIONS_ALLOWED}
@@ -30,7 +30,7 @@ services:
     networks:
       - traefik
     volumes:
-      - ${CONDUIT_PATH}:/var/lib/matrix-conduit
+      - conduit:/var/lib/matrix-conduit
     environment:
       - CONDUIT_ADDRESS=0.0.0.0
       - CONDUIT_ALLOW_ENCRYPTION=${CONDUIT_ALLOW_ENCRYPTION}
@@ -87,8 +87,6 @@ services:
     image: qmcgaw/ddns-updater
     container_name: ddns-updater
     restart: unless-stopped
-    volumes:
-      - ${DDNS_UPDATER_PATH}:/updater/data
     network_mode: bridge
     environment:
       CONFIG: >-
@@ -212,7 +210,7 @@ services:
       - protonmail
       - traefik
     volumes:
-      - ${GHOST_CONTENT_PATH}:/var/lib/ghost/content
+      - ghost:/var/lib/ghost/content
     environment:
       - database__client=mysql
       - database__connection__host=ghost-db
@@ -236,7 +234,7 @@ services:
     networks:
       - ghost
     volumes:
-      - ${GHOST_DB_PATH}:/var/lib/mysql
+      - ghost-db:/var/lib/mysql
     environment:
       - MYSQL_DATABASE=${GHOST_DB_DATABASE}
       - MYSQL_PASSWORD=${GHOST_DB_PASSWORD}
@@ -252,9 +250,9 @@ services:
     networks:
       - traefik
     volumes:
-      - ${JELLYFIN_CACHE_PATH}:/cache
-      - ${JELLYFIN_CONFIG_PATH}:/config
-      - ${JELLYFIN_MEDIA_PATH}:/media:ro
+      - jellyfin:/cache
+      - jellyfin:/config
+      - jellyfin-media:/media:ro
     environment:
       - JELLYFIN_PublishedServerUrl=https://${JELLYFIN_SUBDOMAIN}.${ROOT_DOMAIN}
     labels:
@@ -293,8 +291,8 @@ services:
       - protonmail
       - traefik
     volumes:
-      - ${NEXTCLOUD_CONFIG_PATH}:/config
-      - ${NEXTCLOUD_APP_PATH}:/data
+      - nextcloud:/config
+      - nextcloud:/data
     environment:
       - PUID=${NEXTCLOUD_PUID}
       - PGID=${NEXTCLOUD_PGID}
@@ -324,7 +322,7 @@ services:
     networks:
       - nextcloud
     volumes:
-      - ${NEXTCLOUD_DB_PATH}:/var/lib/postgresql/data
+      - nextcloud-db:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=${NEXTCLOUD_DB_DATABASE}
       - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
@@ -417,8 +415,8 @@ services:
     networks:
       - notes
     volumes:
-      - ${NOTES_DATA_PATH}:/var/lib/mysql
-      - ${NOTES_DATA_IMPORT_PATH}:/docker-entrypoint-initdb.d
+      - notes-db:/var/lib/mysql
+      - notes-db:/docker-entrypoint-initdb.d
     command:
       - --default-authentication-plugin=mysql_native_password
       - --character-set-server=utf8
@@ -579,7 +577,7 @@ services:
     networks:
       - protonmail
     volumes:
-      - ${PROTONMAIL_PATH}:/root
+      - protonmail:/root
 
   redis:
     image: redis:alpine
@@ -588,9 +586,6 @@ services:
     networks:
       - nextcloud
       - notes
-    volumes:
-      - ${NEXTCLOUD_REDIS_PATH}:/var/lib/redis
-      - ${NOTES_REDIS_PATH}:/data
     healthcheck:
       test: [CMD, redis-cli, ping]
       interval: 1s
@@ -621,7 +616,7 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - ${LETSENCRYPT_PATH}:/letsencrypt
+      - letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   uptime-kuma:
@@ -633,7 +628,7 @@ services:
     networks:
       - traefik
     volumes:
-      - ${UPTIME_KUMA_PATH}:/app/data
+      - uptime-kuma:/app/data
     labels:
       - traefik.enable=true
       - traefik.http.routers.uptime-kuma.entrypoints=websecure
@@ -659,3 +654,18 @@ networks:
     name: protonmail
   traefik:
     name: traefik
+
+volumes:
+  bitwarden:
+  conduit:
+  ghost:
+  ghost-db:
+  jellyfin:
+  jellyfin-media:
+    external: true
+  letsencrypt:
+  nextcloud:
+  nextcloud-db:
+  notes-db:
+  protonmail:
+  uptime-kuma:
