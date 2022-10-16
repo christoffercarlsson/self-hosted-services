@@ -1,0 +1,9 @@
+version: '3.7'
+services:
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    container_name: ddns-updater
+    restart: unless-stopped
+    network_mode: bridge
+    volumes:
+      - ./config.json:/updater/data/config.json

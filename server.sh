@@ -79,12 +79,6 @@ set_placeholder() {
   eval $SED_COMMAND "s#$value#$2#g" $ENV_FILE
 }
 
-set_domain_key() {
-  ensure_not_empty "$1" "Please provide a service to set the domain key for."
-  ensure_not_empty "$2" "Please provide a domain key."
-  set_placeholder "$1_DOMAIN_KEY" $2
-}
-
 set_letsencrypt_email() {
   set_placeholder "LETSENCRYPT_EMAIL" $1
 }
@@ -160,9 +154,6 @@ update_services() {
 case "$1" in
   "create-subscription" | "create_subscription")
     create_subscription $2
-    ;;
-  "domain-key" | "domain_key" | "set-domain-key" | "set_domain_key")
-    set_domain_key $2 $3
     ;;
   "logs")
     docker compose logs $2 -f

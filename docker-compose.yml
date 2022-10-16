@@ -17,7 +17,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.bitwarden.entrypoints=websecure
-      - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_HOSTNAME}`)
       - traefik.http.routers.bitwarden.tls.certresolver=selfhostedservices
 
   conduit:
@@ -41,8 +41,7 @@ services:
       - CONDUIT_DATABASE_PATH=/var/lib/matrix-conduit
       - CONDUIT_MAX_REQUEST_SIZE=${CONDUIT_MAX_REQUEST_SIZE}
       - CONDUIT_PORT=6167
-      # - CONDUIT_SERVER_NAME=${CONDUIT_SUBDOMAIN}.${ROOT_DOMAIN}
-      - CONDUIT_SERVER_NAME=${ROOT_DOMAIN}
+      - CONDUIT_SERVER_NAME=${CONDUIT_SERVER_NAME}
       - CONDUIT_TRUSTED_SERVERS=${CONDUIT_TRUSTED_SERVERS}
     labels:
       - traefik.enable=true
@@ -50,7 +49,7 @@ services:
       - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
       - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
       - traefik.http.routers.conduit.entrypoints=websecure
-      - traefik.http.routers.conduit.rule=Host(`${CONDUIT_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.conduit.rule=Host(`${CONDUIT_HOSTNAME}`)
       - traefik.http.routers.conduit.tls.certresolver=selfhostedservices
       - traefik.http.routers.conduit.middlewares=cors-headers
       - traefik.http.services.conduit.loadbalancer.server.port=6167
@@ -66,7 +65,7 @@ services:
     volumes:
       - ./conduit/well-known.template:/etc/nginx/conf.d/conduit-well-known.template
     environment:
-      - CONDUIT_HOSTNAME=${CONDUIT_SUBDOMAIN}.${ROOT_DOMAIN}
+      - CONDUIT_HOSTNAME=${CONDUIT_HOSTNAME}
     command:
       /bin/bash -c "envsubst < /etc/nginx/conf.d/conduit-well-known.template >
       /etc/nginx/conf.d/conduit-well-known.conf && nginx -g 'daemon off;'"
@@ -76,112 +75,10 @@ services:
       - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
       - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
       - traefik.http.routers.conduit-well-known.entrypoints=websecure
-      # - 'traefik.http.routers.conduit-well-known.rule=Host(`${CONDUIT_SUBDOMAIN}.${ROOT_DOMAIN}`)
-      #   && PathPrefix(`/.well-known/matrix`)'
-      - 'traefik.http.routers.conduit-well-known.rule=Host(`${ROOT_DOMAIN}`) &&
-        PathPrefix(`/.well-known/matrix`)'
+      - 'traefik.http.routers.conduit-well-known.rule=Host(`${CONDUIT_SERVER_NAME}`)
+        && PathPrefix(`/.well-known/matrix`)'
       - traefik.http.routers.conduit-well-known.tls.certresolver=selfhostedservices
       - traefik.http.routers.conduit-well-known.middlewares=cors-headers
-
-  ddns-updater:
-    image: qmcgaw/ddns-updater
-    container_name: ddns-updater
-    restart: unless-stopped
-    network_mode: bridge
-    environment:
-      CONFIG: >-
-        {
-          "settings": [
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${BITWARDEN_SUBDOMAIN}",
-              "key": "${BITWARDEN_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${CONDUIT_SUBDOMAIN}",
-              "key": "${CONDUIT_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${EXCALIDRAW_SUBDOMAIN}",
-              "key": "${EXCALIDRAW_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${GHOST_SUBDOMAIN}",
-              "key": "${GHOST_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${JELLYFIN_SUBDOMAIN}",
-              "key": "${JELLYFIN_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${LIBRETRANSLATE_SUBDOMAIN}",
-              "key": "${LIBRETRANSLATE_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${NEXTCLOUD_SUBDOMAIN}",
-              "key": "${NEXTCLOUD_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${NOTES_SUBDOMAIN}",
-              "key": "${NOTES_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${NOTES_FILES_SUBDOMAIN}",
-              "key": "${NOTES_FILES_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${NOTES_SYNC_SUBDOMAIN}",
-              "key": "${NOTES_SYNC_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            },
-            {
-              "provider": "njalla",
-              "domain": "${ROOT_DOMAIN}",
-              "host": "${UPTIME_KUMA_SUBDOMAIN}",
-              "key": "${UPTIME_KUMA_DOMAIN_KEY}",
-              "ip_version": "ipv4",
-              "provider_ip": true
-            }
-          ]
-        }
 
   excalidraw:
     image: excalidraw/excalidraw:latest
@@ -194,7 +91,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.excalidraw.entrypoints=websecure
-      - traefik.http.routers.excalidraw.rule=Host(`${EXCALIDRAW_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.excalidraw.rule=Host(`${EXCALIDRAW_HOSTNAME}`)
       - traefik.http.routers.excalidraw.tls.certresolver=selfhostedservices
 
   ghost:
@@ -217,13 +114,11 @@ services:
       - database__connection__user=${GHOST_DB_USER}
       - database__connection__password=${GHOST_DB_PASSWORD}
       - database__connection__database=${GHOST_DB_DATABASE}
-      # - url=https://${GHOST_SUBDOMAIN}.${ROOT_DOMAIN}
-      - url=https://${ROOT_DOMAIN}
+      - url=https://${GHOST_HOSTNAME}
     labels:
       - traefik.enable=true
       - traefik.http.routers.ghost.entrypoints=websecure
-      # - traefik.http.routers.ghost.rule=Host(`${GHOST_SUBDOMAIN}.${ROOT_DOMAIN}`)
-      - traefik.http.routers.ghost.rule=Host(`${ROOT_DOMAIN}`)
+      - traefik.http.routers.ghost.rule=Host(`${GHOST_HOSTNAME}`)
       - traefik.http.routers.ghost.tls.certresolver=selfhostedservices
       - traefik.http.services.ghost.loadbalancer.server.port=2368
 
@@ -254,11 +149,11 @@ services:
       - jellyfin:/config
       - jellyfin-media:/media:ro
     environment:
-      - JELLYFIN_PublishedServerUrl=https://${JELLYFIN_SUBDOMAIN}.${ROOT_DOMAIN}
+      - JELLYFIN_PublishedServerUrl=https://${JELLYFIN_HOSTNAME}
     labels:
       - traefik.enable=true
       - traefik.http.routers.jellyfin.entrypoints=websecure
-      - traefik.http.routers.jellyfin.rule=Host(`${JELLYFIN_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.jellyfin.rule=Host(`${JELLYFIN_HOSTNAME}`)
       - traefik.http.routers.jellyfin.tls.certresolver=selfhostedservices
       - traefik.http.services.jellyfin.loadbalancer.server.port=8096
 
@@ -273,7 +168,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.libretranslate.entrypoints=websecure
-      - traefik.http.routers.libretranslate.rule=Host(`${LIBRETRANSLATE_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.libretranslate.rule=Host(`${LIBRETRANSLATE_HOSTNAME}`)
       - traefik.http.routers.libretranslate.tls.certresolver=selfhostedservices
       - traefik.http.services.libretranslate.loadbalancer.server.port=5000
 
@@ -310,7 +205,7 @@ services:
       - traefik.http.middlewares.nextcloud-redirect.redirectregex.replacement=https://$${1}/remote.php/dav/
       - traefik.http.routers.nextcloud.entrypoints=websecure
       - traefik.http.routers.nextcloud.middlewares=nextcloud,nextcloud-redirect
-      - traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_HOSTNAME}`)
       - traefik.http.routers.nextcloud.tls.certresolver=selfhostedservices
       - traefik.http.services.nextcloud.loadbalancer.server.port=443
       - traefik.http.services.nextcloud.loadbalancer.server.scheme=https
@@ -344,14 +239,14 @@ services:
       - traefik
     environment:
       - DASHBOARD_URL=http://standardnotes.com/dashboard
-      - DEFAULT_SYNC_SERVER=https://${NOTES_SYNC_SUBDOMAIN}.${ROOT_DOMAIN}
+      - DEFAULT_SYNC_SERVER=https://${NOTES_SYNC_HOSTNAME}
       - PLANS_URL=https://standardnotes.com/plans
       - PURCHASE_URL=https://standardnotes.com/purchase
       - SECRET_KEY_BASE=${NOTES_SECRET_KEY_BASE}
     labels:
       - traefik.enable=true
       - traefik.http.routers.notes.entrypoints=websecure
-      - traefik.http.routers.notes.rule=Host(`${NOTES_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.notes.rule=Host(`${NOTES_HOSTNAME}`)
       - traefik.http.routers.notes.tls.certresolver=selfhostedservices
       - traefik.http.services.notes.loadbalancer.server.port=3000
 
@@ -450,7 +345,7 @@ services:
       - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
       - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
       - traefik.http.routers.notes-files.entrypoints=websecure
-      - traefik.http.routers.notes-files.rule=Host(`${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.notes-files.rule=Host(`${NOTES_FILES_HOSTNAME}`)
       - traefik.http.routers.notes-files.tls.certresolver=selfhostedservices
       - traefik.http.routers.notes-files.middlewares=cors-headers
       - traefik.http.services.notes-files.loadbalancer.server.port=3000
@@ -472,7 +367,7 @@ services:
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
       - AUTH_SERVER_URL=http://notes-auth:3000
-      - FILES_SERVER_URL=https://${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}
+      - FILES_SERVER_URL=https://${NOTES_FILES_HOSTNAME}
       - SYNCING_SERVER_JS_URL=http://notes-sync:3000
       - WORKSPACE_SERVER_URL=http://notes-workspace:3000
     labels:
@@ -481,7 +376,7 @@ services:
       - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
       - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
       - traefik.http.routers.notes-gateway.entrypoints=websecure
-      - traefik.http.routers.notes-gateway.rule=Host(`${NOTES_SYNC_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.notes-gateway.rule=Host(`${NOTES_SYNC_HOSTNAME}`)
       - traefik.http.routers.notes-gateway.tls.certresolver=selfhostedservices
       - traefik.http.routers.notes-gateway.middlewares=cors-headers
       - traefik.http.services.notes-gateway.loadbalancer.server.port=3000
@@ -506,7 +401,7 @@ services:
       - DB_PASSWORD=${NOTES_DB_PASSWORD}
       - DB_USERNAME=${NOTES_DB_USER}
       - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
-      - FILES_SERVER_URL=https://${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}
+      - FILES_SERVER_URL=https://${NOTES_FILES_HOSTNAME}
 
   notes-sync-worker:
     image: standardnotes/syncing-server-js:latest
@@ -529,7 +424,7 @@ services:
       - DB_PASSWORD=${NOTES_DB_PASSWORD}
       - DB_USERNAME=${NOTES_DB_USER}
       - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
-      - FILES_SERVER_URL=https://${NOTES_FILES_SUBDOMAIN}.${ROOT_DOMAIN}
+      - FILES_SERVER_URL=https://${NOTES_FILES_HOSTNAME}
 
   notes-workspace:
     image: standardnotes/workspace:latest
@@ -596,8 +491,6 @@ services:
     image: traefik:v2.8
     container_name: traefik
     restart: unless-stopped
-    depends_on:
-      - ddns-updater
     networks:
       - traefik
     command:
@@ -632,7 +525,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.uptime-kuma.entrypoints=websecure
-      - traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_KUMA_SUBDOMAIN}.${ROOT_DOMAIN}`)
+      - traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_KUMA_HOSTNAME}`)
       - traefik.http.routers.uptime-kuma.tls.certresolver=selfhostedservices
       - traefik.http.services.uptime-kuma.loadbalancer.server.port=3001
 
