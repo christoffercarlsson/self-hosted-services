@@ -5,9 +5,6 @@ services:
     depends_on:
       - protonmail
       - traefik
-    networks:
-      - protonmail
-      - traefik
     volumes:
       - bitwarden:/data
     environment:
@@ -24,8 +21,6 @@ services:
     restart: unless-stopped
     user: root
     depends_on:
-      - traefik
-    networks:
       - traefik
     volumes:
       - conduit:/var/lib/matrix-conduit
@@ -57,8 +52,6 @@ services:
     restart: unless-stopped
     depends_on:
       - traefik
-    networks:
-      - traefik
     volumes:
       - ./conduit/well-known.template:/etc/nginx/conf.d/conduit-well-known.template
     environment:
@@ -82,8 +75,6 @@ services:
     restart: unless-stopped
     depends_on:
       - traefik
-    networks:
-      - traefik
     labels:
       - traefik.enable=true
       - traefik.http.routers.excalidraw.entrypoints=websecure
@@ -95,10 +86,6 @@ services:
     restart: unless-stopped
     depends_on:
       - ghost-db
-      - protonmail
-      - traefik
-    networks:
-      - ghost
       - protonmail
       - traefik
     volumes:
@@ -120,8 +107,6 @@ services:
   ghost-db:
     image: mysql:8.0
     restart: unless-stopped
-    networks:
-      - ghost
     volumes:
       - ghost-db:/var/lib/mysql
     environment:
@@ -134,8 +119,6 @@ services:
     image: jellyfin/jellyfin:latest
     restart: unless-stopped
     depends_on:
-      - traefik
-    networks:
       - traefik
     volumes:
       - jellyfin:/cache
@@ -155,8 +138,6 @@ services:
     restart: unless-stopped
     depends_on:
       - traefik
-    networks:
-      - traefik
     labels:
       - traefik.enable=true
       - traefik.http.routers.libretranslate.entrypoints=websecure
@@ -171,10 +152,6 @@ services:
       - nextcloud-db
       - protonmail
       - redis
-      - traefik
-    networks:
-      - nextcloud
-      - protonmail
       - traefik
     volumes:
       - nextcloud:/config
@@ -204,8 +181,6 @@ services:
   nextcloud-db:
     image: postgres:alpine
     restart: unless-stopped
-    networks:
-      - nextcloud
     volumes:
       - nextcloud-db:/var/lib/postgresql/data
     environment:
@@ -223,8 +198,6 @@ services:
     restart: unless-stopped
     depends_on:
       - notes-gateway
-      - traefik
-    networks:
       - traefik
     environment:
       - DASHBOARD_URL=http://standardnotes.com/dashboard
@@ -245,8 +218,6 @@ services:
     depends_on:
       - notes-db
       - redis
-    networks:
-      - notes
     entrypoint: [./packages/auth/docker/entrypoint.sh, start-web]
     env_file:
       - notes/base.env
@@ -271,8 +242,6 @@ services:
       - notes-auth
       - notes-db
       - redis
-    networks:
-      - notes
     entrypoint: [./packages/auth/docker/entrypoint.sh, start-worker]
     env_file:
       - notes/base.env
@@ -293,8 +262,6 @@ services:
   notes-db:
     image: mysql:5.6
     restart: unless-stopped
-    networks:
-      - notes
     volumes:
       - notes-db:/var/lib/mysql
       - notes-db:/docker-entrypoint-initdb.d
@@ -314,9 +281,6 @@ services:
     depends_on:
       - notes-db
       - redis
-      - traefik
-    networks:
-      - notes
       - traefik
     entrypoint: [./packages/files/docker/entrypoint.sh, start-web]
     env_file: notes/base.env
@@ -343,9 +307,6 @@ services:
       - notes-sync
       - redis
       - traefik
-    networks:
-      - notes
-      - traefik
     entrypoint: [./packages/api-gateway/docker/entrypoint.sh, start-web]
     env_file: notes/base.env
     environment:
@@ -371,8 +332,6 @@ services:
     depends_on:
       - notes-db
       - redis
-    networks:
-      - notes
     entrypoint: [./packages/syncing-server/docker/entrypoint.sh, start-web]
     env_file:
       - notes/base.env
@@ -393,8 +352,6 @@ services:
       - notes-db
       - notes-sync
       - redis
-    networks:
-      - notes
     entrypoint: [./packages/syncing-server/docker/entrypoint.sh, start-worker]
     env_file:
       - notes/base.env
@@ -414,8 +371,6 @@ services:
     depends_on:
       - notes-db
       - redis
-    networks:
-      - notes
     entrypoint: [./packages/workspace/docker/entrypoint.sh, start-web]
     env_file:
       - notes/base.env
@@ -433,8 +388,6 @@ services:
       - notes-db
       - notes-workspace
       - redis
-    networks:
-      - notes
     entrypoint: [./packages/workspace/docker/entrypoint.sh, start-worker]
     env_file:
       - notes/base.env
@@ -448,8 +401,6 @@ services:
   protonmail:
     image: ghcr.io/christoffercarlsson/protonmail-bridge:2.3.0
     restart: unless-stopped
-    networks:
-      - protonmail
     volumes:
       - protonmail:/root
 
@@ -457,9 +408,6 @@ services:
     image: redis:alpine
     container_name: redis
     restart: unless-stopped
-    networks:
-      - nextcloud
-      - notes
     healthcheck:
       test: [CMD, redis-cli, ping]
       interval: 1s
@@ -469,12 +417,9 @@ services:
   traefik:
     image: traefik:v2.8
     restart: unless-stopped
-    networks:
-      - traefik
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
-      - --providers.docker.network=traefik
       - --serverstransport.insecureskipverify=true
       - --entrypoints.websecure.address=:443
       - --entrypoints.web.address=:80
@@ -495,8 +440,6 @@ services:
     restart: unless-stopped
     depends_on:
       - traefik
-    networks:
-      - traefik
     volumes:
       - uptime-kuma:/app/data
     labels:
@@ -513,11 +456,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
-  ghost:
-  nextcloud:
-  notes:
-  protonmail:
-  traefik:
+  default:
+    external: true
+    name: self-hosted-services
 
 volumes:
   bitwarden:

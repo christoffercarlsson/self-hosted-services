@@ -107,17 +107,18 @@ set_secrets() {
 setup() {
   ensure_not_empty "$1" "Please provide a root domain name."
   ensure_not_empty "$2" "Please provide an email address for Let's Encrypt."
-  echo "Initializing default configuration."
+  echo "Initializing default configuration..."
   copy_env_file
   set_root_domain $1
   set_letsencrypt_email $2
   set_secrets
+  docker network create "self-hosted-services" || true
   echo "Default configuration file created. Feel free to modify values as needed."
 }
 
 start_services() {
   check_config_file_changes
-  echo "Starting up infrastructure."
+  echo "Starting up infrastructure..."
   docker compose up -d
   ensure_last_success "Failed to start infrastructure."
   echo "Infrastructure started. Give it a moment to warm up."
@@ -125,20 +126,20 @@ start_services() {
 }
 
 stop_services() {
-  echo "Stopping all services."
-  docker compose kill || true
+  echo "Stopping all services..."
+  docker compose kill
   ensure_last_success "Failed to stop services."
   echo "Services stopped."
 }
 
 pull_git_changes() {
-  echo "Pulling changes from Git."
+  echo "Pulling changes from Git..."
   git pull origin $(git rev-parse --abbrev-ref HEAD)
   ensure_last_success "Failed to pull latest changes from Git."
 }
 
 pull_images() {
-  echo "Downloading latest images."
+  echo "Downloading latest images..."
   docker compose pull
   ensure_last_success "Failed to download latest images."
 }
