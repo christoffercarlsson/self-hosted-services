@@ -5,8 +5,3 @@ services:
     network_mode: bridge
     volumes:
       - ./config.json:/updater/data/config.json
-
-networks:
-  default:
-    external: true
-    name: self-hosted-services

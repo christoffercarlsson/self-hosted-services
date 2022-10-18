@@ -10,11 +10,13 @@ services:
     environment:
       - SIGNUPS_ALLOWED=${BITWARDEN_SIGNUPS_ALLOWED}
       - INVITATIONS_ALLOWED=${BITWARDEN_INVITATIONS_ALLOWED}
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.bitwarden.entrypoints=websecure
-      - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_HOSTNAME}`)
-      - traefik.http.routers.bitwarden.tls.certresolver=selfhostedservices
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.bitwarden.entrypoints=websecure
+        - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_HOSTNAME}`)
+        - traefik.http.routers.bitwarden.tls.certresolver=selfhostedservices
+        - traefik.http.services.bitwarden.loadbalancer.server.port=80
 
   conduit:
     image: matrixconduit/matrix-conduit:latest
@@ -36,16 +38,17 @@ services:
       - CONDUIT_PORT=6167
       - CONDUIT_SERVER_NAME=${CONDUIT_SERVER_NAME}
       - CONDUIT_TRUSTED_SERVERS=${CONDUIT_TRUSTED_SERVERS}
-    labels:
-      - traefik.enable=true
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
-      - traefik.http.routers.conduit.entrypoints=websecure
-      - traefik.http.routers.conduit.rule=Host(`${CONDUIT_HOSTNAME}`)
-      - traefik.http.routers.conduit.tls.certresolver=selfhostedservices
-      - traefik.http.routers.conduit.middlewares=cors-headers
-      - traefik.http.services.conduit.loadbalancer.server.port=6167
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
+        - traefik.http.routers.conduit.entrypoints=websecure
+        - traefik.http.routers.conduit.rule=Host(`${CONDUIT_HOSTNAME}`)
+        - traefik.http.routers.conduit.tls.certresolver=selfhostedservices
+        - traefik.http.routers.conduit.middlewares=cors-headers
+        - traefik.http.services.conduit.loadbalancer.server.port=6167
 
   conduit-well-known:
     image: nginx:latest
@@ -59,27 +62,31 @@ services:
     command:
       /bin/bash -c "envsubst < /etc/nginx/conf.d/conduit-well-known.template >
       /etc/nginx/conf.d/conduit-well-known.conf && nginx -g 'daemon off;'"
-    labels:
-      - traefik.enable=true
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
-      - traefik.http.routers.conduit-well-known.entrypoints=websecure
-      - 'traefik.http.routers.conduit-well-known.rule=Host(`${CONDUIT_SERVER_NAME}`)
-        && PathPrefix(`/.well-known/matrix`)'
-      - traefik.http.routers.conduit-well-known.tls.certresolver=selfhostedservices
-      - traefik.http.routers.conduit-well-known.middlewares=cors-headers
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
+        - traefik.http.routers.conduit-well-known.entrypoints=websecure
+        - 'traefik.http.routers.conduit-well-known.rule=Host(`${CONDUIT_SERVER_NAME}`)
+          && PathPrefix(`/.well-known/matrix`)'
+        - traefik.http.routers.conduit-well-known.tls.certresolver=selfhostedservices
+        - traefik.http.routers.conduit-well-known.middlewares=cors-headers
+        - traefik.http.services.conduit-well-known.loadbalancer.server.port=80
 
   excalidraw:
     image: excalidraw/excalidraw:latest
     restart: unless-stopped
     depends_on:
       - traefik
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.excalidraw.entrypoints=websecure
-      - traefik.http.routers.excalidraw.rule=Host(`${EXCALIDRAW_HOSTNAME}`)
-      - traefik.http.routers.excalidraw.tls.certresolver=selfhostedservices
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.excalidraw.entrypoints=websecure
+        - traefik.http.routers.excalidraw.rule=Host(`${EXCALIDRAW_HOSTNAME}`)
+        - traefik.http.routers.excalidraw.tls.certresolver=selfhostedservices
+        - traefik.http.services.excalidraw.loadbalancer.server.port=80
 
   ghost:
     image: ghost:alpine
@@ -97,12 +104,13 @@ services:
       - database__connection__password=${GHOST_DB_PASSWORD}
       - database__connection__database=${GHOST_DB_DATABASE}
       - url=https://${GHOST_HOSTNAME}
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.ghost.entrypoints=websecure
-      - traefik.http.routers.ghost.rule=Host(`${GHOST_HOSTNAME}`)
-      - traefik.http.routers.ghost.tls.certresolver=selfhostedservices
-      - traefik.http.services.ghost.loadbalancer.server.port=2368
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.ghost.entrypoints=websecure
+        - traefik.http.routers.ghost.rule=Host(`${GHOST_HOSTNAME}`)
+        - traefik.http.routers.ghost.tls.certresolver=selfhostedservices
+        - traefik.http.services.ghost.loadbalancer.server.port=2368
 
   ghost-db:
     image: mysql:8.0
@@ -126,24 +134,26 @@ services:
       - jellyfin-media:/media:ro
     environment:
       - JELLYFIN_PublishedServerUrl=https://${JELLYFIN_HOSTNAME}
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.jellyfin.entrypoints=websecure
-      - traefik.http.routers.jellyfin.rule=Host(`${JELLYFIN_HOSTNAME}`)
-      - traefik.http.routers.jellyfin.tls.certresolver=selfhostedservices
-      - traefik.http.services.jellyfin.loadbalancer.server.port=8096
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.jellyfin.entrypoints=websecure
+        - traefik.http.routers.jellyfin.rule=Host(`${JELLYFIN_HOSTNAME}`)
+        - traefik.http.routers.jellyfin.tls.certresolver=selfhostedservices
+        - traefik.http.services.jellyfin.loadbalancer.server.port=8096
 
   libretranslate:
     image: libretranslate/libretranslate:latest
     restart: unless-stopped
     depends_on:
       - traefik
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.libretranslate.entrypoints=websecure
-      - traefik.http.routers.libretranslate.rule=Host(`${LIBRETRANSLATE_HOSTNAME}`)
-      - traefik.http.routers.libretranslate.tls.certresolver=selfhostedservices
-      - traefik.http.services.libretranslate.loadbalancer.server.port=5000
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.libretranslate.entrypoints=websecure
+        - traefik.http.routers.libretranslate.rule=Host(`${LIBRETRANSLATE_HOSTNAME}`)
+        - traefik.http.routers.libretranslate.tls.certresolver=selfhostedservices
+        - traefik.http.services.libretranslate.loadbalancer.server.port=5000
 
   nextcloud:
     image: lscr.io/linuxserver/nextcloud:latest
@@ -160,23 +170,24 @@ services:
       - PUID=${NEXTCLOUD_PUID}
       - PGID=${NEXTCLOUD_PGID}
       - TZ=${NEXTCLOUD_TIMEZONE}
-    labels:
-      - traefik.enable=true
-      - traefik.http.middlewares.nextcloud.headers.browserXSSFilter=true
-      - traefik.http.middlewares.nextcloud.headers.contentTypeNosniff=true
-      - traefik.http.middlewares.nextcloud.headers.customRequestHeaders.X-Forwarded-Proto=https
-      - traefik.http.middlewares.nextcloud.headers.stsIncludeSubdomains=true
-      - traefik.http.middlewares.nextcloud.headers.stsPreload=true
-      - traefik.http.middlewares.nextcloud.headers.stsSeconds=155520011
-      - traefik.http.middlewares.nextcloud-redirect.redirectregex.permanent=true
-      - traefik.http.middlewares.nextcloud-redirect.redirectregex.regex=https://(.*)/.well-known/(card|cal)dav
-      - traefik.http.middlewares.nextcloud-redirect.redirectregex.replacement=https://$${1}/remote.php/dav/
-      - traefik.http.routers.nextcloud.entrypoints=websecure
-      - traefik.http.routers.nextcloud.middlewares=nextcloud,nextcloud-redirect
-      - traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_HOSTNAME}`)
-      - traefik.http.routers.nextcloud.tls.certresolver=selfhostedservices
-      - traefik.http.services.nextcloud.loadbalancer.server.port=443
-      - traefik.http.services.nextcloud.loadbalancer.server.scheme=https
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.middlewares.nextcloud.headers.browserXSSFilter=true
+        - traefik.http.middlewares.nextcloud.headers.contentTypeNosniff=true
+        - traefik.http.middlewares.nextcloud.headers.customRequestHeaders.X-Forwarded-Proto=https
+        - traefik.http.middlewares.nextcloud.headers.stsIncludeSubdomains=true
+        - traefik.http.middlewares.nextcloud.headers.stsPreload=true
+        - traefik.http.middlewares.nextcloud.headers.stsSeconds=155520011
+        - traefik.http.middlewares.nextcloud-redirect.redirectregex.permanent=true
+        - traefik.http.middlewares.nextcloud-redirect.redirectregex.regex=https://(.*)/.well-known/(card|cal)dav
+        - traefik.http.middlewares.nextcloud-redirect.redirectregex.replacement=https://$${1}/remote.php/dav/
+        - traefik.http.routers.nextcloud.entrypoints=websecure
+        - traefik.http.routers.nextcloud.middlewares=nextcloud,nextcloud-redirect
+        - traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_HOSTNAME}`)
+        - traefik.http.routers.nextcloud.tls.certresolver=selfhostedservices
+        - traefik.http.services.nextcloud.loadbalancer.server.port=443
+        - traefik.http.services.nextcloud.loadbalancer.server.scheme=https
 
   nextcloud-db:
     image: postgres:alpine
@@ -205,12 +216,13 @@ services:
       - PLANS_URL=https://standardnotes.com/plans
       - PURCHASE_URL=https://standardnotes.com/purchase
       - SECRET_KEY_BASE=${NOTES_SECRET_KEY_BASE}
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.notes.entrypoints=websecure
-      - traefik.http.routers.notes.rule=Host(`${NOTES_HOSTNAME}`)
-      - traefik.http.routers.notes.tls.certresolver=selfhostedservices
-      - traefik.http.services.notes.loadbalancer.server.port=3000
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.notes.entrypoints=websecure
+        - traefik.http.routers.notes.rule=Host(`${NOTES_HOSTNAME}`)
+        - traefik.http.routers.notes.tls.certresolver=selfhostedservices
+        - traefik.http.services.notes.loadbalancer.server.port=3000
 
   notes-auth:
     image: standardnotes/auth:latest
@@ -288,16 +300,17 @@ services:
       - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
       - MAX_CHUNK_BYTES={NOTES_FILE_MAX_UPLOAD_BYTES}
       - VALET_TOKEN_SECRET=${NOTES_VALET_TOKEN_SECRET}
-    labels:
-      - traefik.enable=true
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
-      - traefik.http.routers.notes-files.entrypoints=websecure
-      - traefik.http.routers.notes-files.rule=Host(`${NOTES_FILES_HOSTNAME}`)
-      - traefik.http.routers.notes-files.tls.certresolver=selfhostedservices
-      - traefik.http.routers.notes-files.middlewares=cors-headers
-      - traefik.http.services.notes-files.loadbalancer.server.port=3000
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
+        - traefik.http.routers.notes-files.entrypoints=websecure
+        - traefik.http.routers.notes-files.rule=Host(`${NOTES_FILES_HOSTNAME}`)
+        - traefik.http.routers.notes-files.tls.certresolver=selfhostedservices
+        - traefik.http.routers.notes-files.middlewares=cors-headers
+        - traefik.http.services.notes-files.loadbalancer.server.port=3000
 
   notes-gateway:
     image: standardnotes/api-gateway:latest
@@ -315,16 +328,17 @@ services:
       - FILES_SERVER_URL=https://${NOTES_FILES_HOSTNAME}
       - SYNCING_SERVER_JS_URL=http://notes-sync:3000
       - WORKSPACE_SERVER_URL=http://notes-workspace:3000
-    labels:
-      - traefik.enable=true
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
-      - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
-      - traefik.http.routers.notes-gateway.entrypoints=websecure
-      - traefik.http.routers.notes-gateway.rule=Host(`${NOTES_SYNC_HOSTNAME}`)
-      - traefik.http.routers.notes-gateway.tls.certresolver=selfhostedservices
-      - traefik.http.routers.notes-gateway.middlewares=cors-headers
-      - traefik.http.services.notes-gateway.loadbalancer.server.port=3000
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
+        - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
+        - traefik.http.routers.notes-gateway.entrypoints=websecure
+        - traefik.http.routers.notes-gateway.rule=Host(`${NOTES_SYNC_HOSTNAME}`)
+        - traefik.http.routers.notes-gateway.tls.certresolver=selfhostedservices
+        - traefik.http.routers.notes-gateway.middlewares=cors-headers
+        - traefik.http.services.notes-gateway.loadbalancer.server.port=3000
 
   notes-sync:
     image: standardnotes/syncing-server-js:latest
@@ -420,6 +434,7 @@ services:
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
+      - --providers.docker.swarmMode=true
       - --serverstransport.insecureskipverify=true
       - --entrypoints.websecure.address=:443
       - --entrypoints.web.address=:80
@@ -442,12 +457,13 @@ services:
       - traefik
     volumes:
       - uptime-kuma:/app/data
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.uptime-kuma.entrypoints=websecure
-      - traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_KUMA_HOSTNAME}`)
-      - traefik.http.routers.uptime-kuma.tls.certresolver=selfhostedservices
-      - traefik.http.services.uptime-kuma.loadbalancer.server.port=3001
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.uptime-kuma.entrypoints=websecure
+        - traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_KUMA_HOSTNAME}`)
+        - traefik.http.routers.uptime-kuma.tls.certresolver=selfhostedservices
+        - traefik.http.services.uptime-kuma.loadbalancer.server.port=3001
 
   watchtower:
     image: containrrr/watchtower:latest

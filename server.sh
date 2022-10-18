@@ -30,24 +30,6 @@ ensure_not_empty() {
   fi
 }
 
-check_config_file_changes() {
-  if [[ ! -f "$ENV_FILE" ]]
-  then
-    echo "Could not find environment file."
-    echo "Please run the './server.sh setup' command and try again."
-    exit 1
-  fi
-  local sample_env_lines=$(wc -l "$SAMPLE_ENV_FILE" | awk '{ print $1 }')
-  local env_lines=$(wc -l "$ENV_FILE" | awk '{ print $1 }')
-  if [[ "$sample_env_lines" -ne "$env_lines" ]]
-  then
-    echo "The environment file contains a different amount of lines than \
-    the sample file. There may be a new environment variable to configure."
-    echo "Please update your environment file and try again."
-    exit 1
-  fi
-}
-
 create_subscription() {
   ensure_not_empty "$1" "Please provide an email for the subscription."
   echo "Creating Standard Notes subscription."
@@ -112,56 +94,12 @@ setup() {
   set_root_domain $1
   set_letsencrypt_email $2
   set_secrets
-  docker network create "self-hosted-services" || true
   echo "Default configuration file created. Feel free to modify values as needed."
-}
-
-start_services() {
-  check_config_file_changes
-  echo "Starting up infrastructure..."
-  docker compose up -d
-  ensure_last_success "Failed to start infrastructure."
-  echo "Infrastructure started. Give it a moment to warm up."
-  echo "Run the './server.sh logs' command to see details."
-}
-
-stop_services() {
-  echo "Stopping all services..."
-  docker compose kill
-  ensure_last_success "Failed to stop services."
-  echo "Services stopped."
-}
-
-pull_git_changes() {
-  echo "Pulling changes from Git..."
-  git pull origin $(git rev-parse --abbrev-ref HEAD)
-  ensure_last_success "Failed to pull latest changes from Git."
-}
-
-pull_images() {
-  echo "Downloading latest images..."
-  docker compose pull
-  ensure_last_success "Failed to download latest images."
-}
-
-update_services() {
-  stop_services
-  pull_git_changes
-  check_config_file_changes
-  pull_images
-  echo "Infrastructure updated."
 }
 
 case "$1" in
   "create-subscription" | "create_subscription")
     create_subscription $2
-    ;;
-  "logs")
-    docker compose logs $2 -f
-    ;;
-  "restart")
-    stop_services
-    start_services
     ;;
   "secret" | "set-secret" | "set_secret")
     set_secret $2
@@ -169,20 +107,8 @@ case "$1" in
   "secrets" | "set-secrets" | "set_secrets")
     set_secrets
     ;;
-  "status")
-    docker compose ps
-    ;;
   "setup")
     setup $2 $3
-    ;;
-  "start")
-    start_services
-    ;;
-  "stop")
-    stop_services
-    ;;
-  "update")
-    update_services
     ;;
   *)
     echo "Unknown command"
