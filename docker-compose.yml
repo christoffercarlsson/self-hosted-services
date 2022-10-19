@@ -598,5 +598,10 @@ services:
 
 networks:
   self-hosted-services:
-    name: self-hosted-services
     external: true
+    name: self-hosted-services
+
+volumes:
+  jellyfin-media:
+    external: true
+    name: self-hosted-jellyfin
