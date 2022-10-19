@@ -1,3 +1,2 @@
 .env
-/ddns-updater/data/config.json
-/ddns-updater/data/updates.json
+/ddns-updater

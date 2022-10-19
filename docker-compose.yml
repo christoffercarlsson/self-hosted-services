@@ -58,6 +58,9 @@ services:
       /bin/bash -c "envsubst < /etc/nginx/conf.d/conduit-well-known.template >
       /etc/nginx/conf.d/conduit-well-known.conf && nginx -g 'daemon off;'"
     deploy:
+      placement:
+        constraints:
+          - node.role == manager
       restart_policy:
         condition: on-failure
       labels:
@@ -71,6 +74,17 @@ services:
         - traefik.http.routers.conduit-well-known.tls.certresolver=selfhostedservices
         - traefik.http.routers.conduit-well-known.middlewares=cors-headers
         - traefik.http.services.conduit-well-known.loadbalancer.server.port=80
+
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    volumes:
+      - ./ddns-updater:/updater/data
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
 
   excalidraw:
     image: excalidraw/excalidraw:latest
@@ -454,23 +468,3 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
-
-networks:
-  default:
-    external: true
-    name: self-hosted-services
-
-volumes:
-  bitwarden:
-  conduit:
-  ghost:
-  ghost-db:
-  jellyfin:
-  jellyfin-media:
-    external: true
-  letsencrypt:
-  nextcloud:
-  nextcloud-db:
-  notes-db:
-  protonmail:
-  uptime-kuma:
