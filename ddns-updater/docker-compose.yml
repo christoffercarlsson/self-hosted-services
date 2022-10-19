@@ -1,8 +1,14 @@
 version: '3.8'
+name: self-hosted-services-ddns
 services:
   ddns-updater:
     image: qmcgaw/ddns-updater
-    restart: unless-stopped
     network_mode: bridge
     volumes:
       - ./config.json:/updater/data/config.json
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
