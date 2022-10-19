@@ -105,9 +105,9 @@ services:
     environment:
       - database__client=mysql
       - database__connection__host=ghost-db
-      - database__connection__user=${GHOST_DB_USER}
+      - database__connection__user=ghost
       - database__connection__password=${GHOST_DB_PASSWORD}
-      - database__connection__database=${GHOST_DB_DATABASE}
+      - database__connection__database=ghost
       - url=https://${GHOST_HOSTNAME}
     deploy:
       restart_policy:
@@ -124,10 +124,10 @@ services:
     volumes:
       - ghost-db:/var/lib/mysql
     environment:
-      - MYSQL_DATABASE=${GHOST_DB_DATABASE}
+      - MYSQL_DATABASE=ghost
       - MYSQL_PASSWORD=${GHOST_DB_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${GHOST_DB_PASSWORD}
-      - MYSQL_USER=${GHOST_DB_USER}
+      - MYSQL_USER=ghost
     deploy:
       restart_policy:
         condition: on-failure
@@ -197,9 +197,9 @@ services:
     volumes:
       - nextcloud-db:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=${NEXTCLOUD_DB_DATABASE}
+      - POSTGRES_DB=nextcloud
       - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
-      - POSTGRES_USER=${NEXTCLOUD_DB_USER}
+      - POSTGRES_USER=nextcloud
     deploy:
       restart_policy:
         condition: on-failure
@@ -230,21 +230,37 @@ services:
   notes-auth:
     image: standardnotes/auth:latest
     entrypoint: [./packages/auth/docker/entrypoint.sh, start-web]
-    env_file:
-      - notes/base.env
-      - notes/auth.env
-      - notes/db.env
     environment:
+      - ACCESS_TOKEN_AGE=${NOTES_ACCESS_TOKEN_AGE}
+      - AUTH_JWT_TTL=${NOTES_AUTH_JWT_TTL}
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
-      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - DB_DATABASE=notes
+      - DB_DEBUG_LEVEL=${NOTES_DB_DEBUG_LEVEL}
+      - DB_HOST=notes-db
+      - DB_MIGRATIONS_PATH=dist/migrations/*.js
       - DB_PASSWORD=${NOTES_DB_PASSWORD}
-      - DB_USERNAME=${NOTES_DB_USER}
+      - DB_PORT=3306
+      - DB_REPLICA_HOST=notes-db
+      - DB_USERNAME=notes
       - DISABLE_USER_REGISTRATION=${NOTES_DISABLE_USER_REGISTRATION}
       - ENCRYPTION_SERVER_KEY=${NOTES_ENCRYPTION_SERVER_KEY}
+      - EPHEMERAL_SESSION_AGE=${NOTES_EPHEMERAL_SESSION_AGE}
+      - FAILED_LOGIN_LOCKOUT=${NOTES_FAILED_LOGIN_LOCKOUT}
       - JWT_SECRET=${NOTES_JWT_SECRET}
       - LEGACY_JWT_SECRET=${NOTES_LEGACY_JWT_SECRET}
+      - LOG_LEVEL=${NOTES_LOG_LEVEL}
+      - MAX_LOGIN_ATTEMPTS=${NOTES_MAX_LOGIN_ATTEMPTS}
+      - NEW_RELIC_ENABLED=false
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_EVENTS_CHANNEL=notes-auth-events
+      - REDIS_URL=redis://redis
+      - REFRESH_TOKEN_AGE=${NOTES_REFRESH_TOKEN_AGE}
+      - SYNCING_SERVER_URL=http://notes-sync:3000
       - PSEUDO_KEY_PARAMS_KEY=${NOTES_PSEUDO_KEY_PARAMS_KEY}
+      - VALET_TOKEN_TTL=${NOTES_VALET_TOKEN_TTL}
       - VALET_TOKEN_SECRET=${NOTES_VALET_TOKEN_SECRET}
+      - VERSION=local
     deploy:
       restart_policy:
         condition: on-failure
@@ -252,21 +268,37 @@ services:
   notes-auth-worker:
     image: standardnotes/auth:latest
     entrypoint: [./packages/auth/docker/entrypoint.sh, start-worker]
-    env_file:
-      - notes/base.env
-      - notes/auth.env
-      - notes/db.env
     environment:
+      - ACCESS_TOKEN_AGE=${NOTES_ACCESS_TOKEN_AGE}
+      - AUTH_JWT_TTL=${NOTES_AUTH_JWT_TTL}
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
-      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - DB_DATABASE=notes
+      - DB_DEBUG_LEVEL=${NOTES_DB_DEBUG_LEVEL}
+      - DB_HOST=notes-db
+      - DB_MIGRATIONS_PATH=dist/migrations/*.js
       - DB_PASSWORD=${NOTES_DB_PASSWORD}
-      - DB_USERNAME=${NOTES_DB_USER}
+      - DB_PORT=3306
+      - DB_REPLICA_HOST=notes-db
+      - DB_USERNAME=notes
       - DISABLE_USER_REGISTRATION=${NOTES_DISABLE_USER_REGISTRATION}
       - ENCRYPTION_SERVER_KEY=${NOTES_ENCRYPTION_SERVER_KEY}
+      - EPHEMERAL_SESSION_AGE=${NOTES_EPHEMERAL_SESSION_AGE}
+      - FAILED_LOGIN_LOCKOUT=${NOTES_FAILED_LOGIN_LOCKOUT}
       - JWT_SECRET=${NOTES_JWT_SECRET}
       - LEGACY_JWT_SECRET=${NOTES_LEGACY_JWT_SECRET}
+      - LOG_LEVEL=${NOTES_LOG_LEVEL}
+      - MAX_LOGIN_ATTEMPTS=${NOTES_MAX_LOGIN_ATTEMPTS}
+      - NEW_RELIC_ENABLED=false
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_EVENTS_CHANNEL=notes-auth-events
+      - REDIS_URL=redis://redis
+      - REFRESH_TOKEN_AGE=${NOTES_REFRESH_TOKEN_AGE}
+      - SYNCING_SERVER_URL=http://notes-sync:3000
       - PSEUDO_KEY_PARAMS_KEY=${NOTES_PSEUDO_KEY_PARAMS_KEY}
+      - VALET_TOKEN_TTL=${NOTES_VALET_TOKEN_TTL}
       - VALET_TOKEN_SECRET=${NOTES_VALET_TOKEN_SECRET}
+      - VERSION=local
     deploy:
       restart_policy:
         condition: on-failure
@@ -281,22 +313,30 @@ services:
       - --character-set-server=utf8
       - --collation-server=utf8_general_ci
     environment:
-      - MYSQL_DATABASE=${NOTES_DB_DATABASE}
+      - MYSQL_DATABASE=notes
       - MYSQL_PASSWORD=${NOTES_DB_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${NOTES_DB_PASSWORD}
-      - MYSQL_USER=${NOTES_DB_USER}
+      - MYSQL_USER=notes
     deploy:
       restart_policy:
         condition: on-failure
 
   notes-files:
     image: standardnotes/files:latest
+    volumes:
+      - notes-files:/var/www/data/uploads
     entrypoint: [./packages/files/docker/entrypoint.sh, start-web]
-    env_file: notes/base.env
     environment:
-      - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
+      - FILE_UPLOAD_PATH=data/uploads
+      - LOG_LEVEL=${NOTES_LOG_LEVEL}
       - MAX_CHUNK_BYTES={NOTES_FILE_MAX_UPLOAD_BYTES}
+      - NEW_RELIC_ENABLED=false
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis
+      - REDIS_EVENTS_CHANNEL=notes-files-events
       - VALET_TOKEN_SECRET=${NOTES_VALET_TOKEN_SECRET}
+      - VERSION=local
     deploy:
       restart_policy:
         condition: on-failure
@@ -314,12 +354,18 @@ services:
   notes-gateway:
     image: standardnotes/api-gateway:latest
     entrypoint: [./packages/api-gateway/docker/entrypoint.sh, start-web]
-    env_file: notes/base.env
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
       - AUTH_SERVER_URL=http://notes-auth:3000
       - FILES_SERVER_URL=https://${NOTES_FILES_HOSTNAME}
+      - LOG_LEVEL=${NOTES_LOG_LEVEL}
+      - NEW_RELIC_ENABLED=false
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis
+      - REDIS_EVENTS_CHANNEL=notes-api-events
       - SYNCING_SERVER_JS_URL=http://notes-sync:3000
+      - VERSION=local
       - WORKSPACE_SERVER_URL=http://notes-workspace:3000
     deploy:
       restart_policy:
@@ -338,17 +384,27 @@ services:
   notes-sync:
     image: standardnotes/syncing-server-js:latest
     entrypoint: [./packages/syncing-server/docker/entrypoint.sh, start-web]
-    env_file:
-      - notes/base.env
-      - notes/db.env
-      - notes/sync.env
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
-      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - AUTH_SERVER_URL=http://notes-auth:3000
+      - DB_DATABASE=notes
+      - DB_DEBUG_LEVEL=${NOTES_DB_DEBUG_LEVEL}
+      - DB_HOST=notes-db
+      - DB_MIGRATIONS_PATH=dist/migrations/*.js
       - DB_PASSWORD=${NOTES_DB_PASSWORD}
-      - DB_USERNAME=${NOTES_DB_USER}
-      - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
+      - DB_PORT=3306
+      - DB_REPLICA_HOST=notes-db
+      - DB_USERNAME=notes
       - FILES_SERVER_URL=https://${NOTES_FILES_HOSTNAME}
+      - LOG_LEVEL=${NOTES_LOG_LEVEL}
+      - MAIL_ATTACHMENT_MAX_BYTE_SIZE=${NOTES_EMAIL_ATTACHMENT_MAX_BYTE_SIZE}
+      - NEW_RELIC_ENABLED=false
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_EVENTS_CHANNEL=notes-sync-events
+      - REDIS_URL=redis://redis
+      - REVISIONS_FREQUENCY=${NOTES_REVISIONS_FREQUENCY}
+      - VERSION=local
     deploy:
       restart_policy:
         condition: on-failure
@@ -356,17 +412,27 @@ services:
   notes-sync-worker:
     image: standardnotes/syncing-server-js:latest
     entrypoint: [./packages/syncing-server/docker/entrypoint.sh, start-worker]
-    env_file:
-      - notes/base.env
-      - notes/db.env
-      - notes/sync.env
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
-      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - AUTH_SERVER_URL=http://notes-auth:3000
+      - DB_DATABASE=notes
+      - DB_DEBUG_LEVEL=${NOTES_DB_DEBUG_LEVEL}
+      - DB_HOST=notes-db
+      - DB_MIGRATIONS_PATH=dist/migrations/*.js
       - DB_PASSWORD=${NOTES_DB_PASSWORD}
-      - DB_USERNAME=${NOTES_DB_USER}
-      - FILE_UPLOAD_PATH=${NOTES_FILE_UPLOAD_PATH}
+      - DB_PORT=3306
+      - DB_REPLICA_HOST=notes-db
+      - DB_USERNAME=notes
       - FILES_SERVER_URL=https://${NOTES_FILES_HOSTNAME}
+      - LOG_LEVEL=${NOTES_LOG_LEVEL}
+      - MAIL_ATTACHMENT_MAX_BYTE_SIZE=${NOTES_EMAIL_ATTACHMENT_MAX_BYTE_SIZE}
+      - NEW_RELIC_ENABLED=false
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_EVENTS_CHANNEL=notes-sync-events
+      - REDIS_URL=redis://redis
+      - REVISIONS_FREQUENCY=${NOTES_REVISIONS_FREQUENCY}
+      - VERSION=local
     deploy:
       restart_policy:
         condition: on-failure
@@ -374,14 +440,23 @@ services:
   notes-workspace:
     image: standardnotes/workspace:latest
     entrypoint: [./packages/workspace/docker/entrypoint.sh, start-web]
-    env_file:
-      - notes/base.env
-      - notes/db.env
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
-      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - DB_DATABASE=notes
+      - DB_DEBUG_LEVEL=${NOTES_DB_DEBUG_LEVEL}
+      - DB_HOST=notes-db
+      - DB_MIGRATIONS_PATH=dist/migrations/*.js
       - DB_PASSWORD=${NOTES_DB_PASSWORD}
-      - DB_USERNAME=${NOTES_DB_USER}
+      - DB_PORT=3306
+      - DB_REPLICA_HOST=notes-db
+      - DB_USERNAME=notes
+      - LOG_LEVEL=${NOTES_LOG_LEVEL}
+      - NEW_RELIC_ENABLED=false
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis
+      - REDIS_EVENTS_CHANNEL=notes-workspace-events
+      - VERSION=local
     deploy:
       restart_policy:
         condition: on-failure
@@ -389,14 +464,23 @@ services:
   notes-workspace-worker:
     image: standardnotes/workspace:latest
     entrypoint: [./packages/workspace/docker/entrypoint.sh, start-worker]
-    env_file:
-      - notes/base.env
-      - notes/db.env
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
-      - DB_DATABASE=${NOTES_DB_DATABASE}
+      - DB_DATABASE=notes
+      - DB_DEBUG_LEVEL=${NOTES_DB_DEBUG_LEVEL}
+      - DB_HOST=notes-db
+      - DB_MIGRATIONS_PATH=dist/migrations/*.js
       - DB_PASSWORD=${NOTES_DB_PASSWORD}
-      - DB_USERNAME=${NOTES_DB_USER}
+      - DB_PORT=3306
+      - DB_REPLICA_HOST=notes-db
+      - DB_USERNAME=notes
+      - LOG_LEVEL=${NOTES_LOG_LEVEL}
+      - NEW_RELIC_ENABLED=false
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis
+      - REDIS_EVENTS_CHANNEL=notes-workspace-events
+      - VERSION=local
     deploy:
       restart_policy:
         condition: on-failure
