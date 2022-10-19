@@ -60,7 +60,7 @@ deploy() {
   set -a
   source $ENV_FILE
   set +a
-  docker stack deploy -c "$BASE_DIRECTORY/docker-compose.yml" ${1:-DOCKER_STACK_NAME}
+  docker stack deploy -c "$BASE_DIRECTORY/docker-compose.yml" "${1:-$DOCKER_STACK_NAME}"
 }
 
 set_placeholder() {
