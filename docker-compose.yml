@@ -2,6 +2,8 @@ version: '3.8'
 services:
   bitwarden:
     image: vaultwarden/server:latest
+    networks:
+      - self-hosted-services
     volumes:
       - bitwarden:/data
     environment:
@@ -12,13 +14,15 @@ services:
         condition: on-failure
       labels:
         - traefik.enable=true
-        - traefik.http.routers.bitwarden.entrypoints=websecure
+        - traefik.http.routers.bitwarden.entrypoints=web-secure
         - traefik.http.routers.bitwarden.rule=Host(`${BITWARDEN_HOSTNAME}`)
-        - traefik.http.routers.bitwarden.tls.certresolver=selfhostedservices
+        - traefik.http.routers.bitwarden.tls.certresolver=self-hosted-services
         - traefik.http.services.bitwarden.loadbalancer.server.port=80
 
   conduit:
     image: matrixconduit/matrix-conduit:latest
+    networks:
+      - self-hosted-services
     user: root
     volumes:
       - conduit:/var/lib/matrix-conduit
@@ -42,14 +46,16 @@ services:
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
-        - traefik.http.routers.conduit.entrypoints=websecure
+        - traefik.http.routers.conduit.entrypoints=web-secure
         - traefik.http.routers.conduit.rule=Host(`${CONDUIT_HOSTNAME}`)
-        - traefik.http.routers.conduit.tls.certresolver=selfhostedservices
+        - traefik.http.routers.conduit.tls.certresolver=self-hosted-services
         - traefik.http.routers.conduit.middlewares=cors-headers
         - traefik.http.services.conduit.loadbalancer.server.port=6167
 
   conduit-well-known:
     image: nginx:latest
+    networks:
+      - self-hosted-services
     volumes:
       - ./conduit/well-known.template:/etc/nginx/conf.d/conduit-well-known.template
     environment:
@@ -68,15 +74,17 @@ services:
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
-        - traefik.http.routers.conduit-well-known.entrypoints=websecure
+        - traefik.http.routers.conduit-well-known.entrypoints=web-secure
         - 'traefik.http.routers.conduit-well-known.rule=Host(`${CONDUIT_SERVER_NAME}`)
           && PathPrefix(`/.well-known/matrix`)'
-        - traefik.http.routers.conduit-well-known.tls.certresolver=selfhostedservices
+        - traefik.http.routers.conduit-well-known.tls.certresolver=self-hosted-services
         - traefik.http.routers.conduit-well-known.middlewares=cors-headers
         - traefik.http.services.conduit-well-known.loadbalancer.server.port=80
 
   ddns-updater:
     image: qmcgaw/ddns-updater
+    networks:
+      - self-hosted-services
     volumes:
       - ./ddns-updater:/updater/data
     deploy:
@@ -88,18 +96,22 @@ services:
 
   excalidraw:
     image: excalidraw/excalidraw:latest
+    networks:
+      - self-hosted-services
     deploy:
       restart_policy:
         condition: on-failure
       labels:
         - traefik.enable=true
-        - traefik.http.routers.excalidraw.entrypoints=websecure
+        - traefik.http.routers.excalidraw.entrypoints=web-secure
         - traefik.http.routers.excalidraw.rule=Host(`${EXCALIDRAW_HOSTNAME}`)
-        - traefik.http.routers.excalidraw.tls.certresolver=selfhostedservices
+        - traefik.http.routers.excalidraw.tls.certresolver=self-hosted-services
         - traefik.http.services.excalidraw.loadbalancer.server.port=80
 
   ghost:
     image: ghost:alpine
+    networks:
+      - self-hosted-services
     volumes:
       - ghost:/var/lib/ghost/content
     environment:
@@ -114,13 +126,15 @@ services:
         condition: on-failure
       labels:
         - traefik.enable=true
-        - traefik.http.routers.ghost.entrypoints=websecure
+        - traefik.http.routers.ghost.entrypoints=web-secure
         - traefik.http.routers.ghost.rule=Host(`${GHOST_HOSTNAME}`)
-        - traefik.http.routers.ghost.tls.certresolver=selfhostedservices
+        - traefik.http.routers.ghost.tls.certresolver=self-hosted-services
         - traefik.http.services.ghost.loadbalancer.server.port=2368
 
   ghost-db:
     image: mysql:8.0
+    networks:
+      - self-hosted-services
     volumes:
       - ghost-db:/var/lib/mysql
     environment:
@@ -134,6 +148,8 @@ services:
 
   jellyfin:
     image: jellyfin/jellyfin:latest
+    networks:
+      - self-hosted-services
     volumes:
       - jellyfin:/cache
       - jellyfin:/config
@@ -145,25 +161,29 @@ services:
         condition: on-failure
       labels:
         - traefik.enable=true
-        - traefik.http.routers.jellyfin.entrypoints=websecure
+        - traefik.http.routers.jellyfin.entrypoints=web-secure
         - traefik.http.routers.jellyfin.rule=Host(`${JELLYFIN_HOSTNAME}`)
-        - traefik.http.routers.jellyfin.tls.certresolver=selfhostedservices
+        - traefik.http.routers.jellyfin.tls.certresolver=self-hosted-services
         - traefik.http.services.jellyfin.loadbalancer.server.port=8096
 
   libretranslate:
     image: libretranslate/libretranslate:latest
+    networks:
+      - self-hosted-services
     deploy:
       restart_policy:
         condition: on-failure
       labels:
         - traefik.enable=true
-        - traefik.http.routers.libretranslate.entrypoints=websecure
+        - traefik.http.routers.libretranslate.entrypoints=web-secure
         - traefik.http.routers.libretranslate.rule=Host(`${LIBRETRANSLATE_HOSTNAME}`)
-        - traefik.http.routers.libretranslate.tls.certresolver=selfhostedservices
+        - traefik.http.routers.libretranslate.tls.certresolver=self-hosted-services
         - traefik.http.services.libretranslate.loadbalancer.server.port=5000
 
   nextcloud:
     image: lscr.io/linuxserver/nextcloud:latest
+    networks:
+      - self-hosted-services
     volumes:
       - nextcloud:/config
       - nextcloud:/data
@@ -185,15 +205,17 @@ services:
         - traefik.http.middlewares.nextcloud-redirect.redirectregex.permanent=true
         - traefik.http.middlewares.nextcloud-redirect.redirectregex.regex=https://(.*)/.well-known/(card|cal)dav
         - traefik.http.middlewares.nextcloud-redirect.redirectregex.replacement=https://$${1}/remote.php/dav/
-        - traefik.http.routers.nextcloud.entrypoints=websecure
+        - traefik.http.routers.nextcloud.entrypoints=web-secure
         - traefik.http.routers.nextcloud.middlewares=nextcloud,nextcloud-redirect
         - traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_HOSTNAME}`)
-        - traefik.http.routers.nextcloud.tls.certresolver=selfhostedservices
+        - traefik.http.routers.nextcloud.tls.certresolver=self-hosted-services
         - traefik.http.services.nextcloud.loadbalancer.server.port=443
         - traefik.http.services.nextcloud.loadbalancer.server.scheme=https
 
   nextcloud-db:
     image: postgres:alpine
+    networks:
+      - self-hosted-services
     volumes:
       - nextcloud-db:/var/lib/postgresql/data
     environment:
@@ -211,6 +233,8 @@ services:
 
   notes:
     image: standardnotes/web:stable
+    networks:
+      - self-hosted-services
     environment:
       - DASHBOARD_URL=http://standardnotes.com/dashboard
       - DEFAULT_SYNC_SERVER=https://${NOTES_SYNC_HOSTNAME}
@@ -222,13 +246,15 @@ services:
         condition: on-failure
       labels:
         - traefik.enable=true
-        - traefik.http.routers.notes.entrypoints=websecure
+        - traefik.http.routers.notes.entrypoints=web-secure
         - traefik.http.routers.notes.rule=Host(`${NOTES_HOSTNAME}`)
-        - traefik.http.routers.notes.tls.certresolver=selfhostedservices
+        - traefik.http.routers.notes.tls.certresolver=self-hosted-services
         - traefik.http.services.notes.loadbalancer.server.port=3000
 
   notes-auth:
     image: standardnotes/auth:latest
+    networks:
+      - self-hosted-services
     entrypoint: [./packages/auth/docker/entrypoint.sh, start-web]
     environment:
       - ACCESS_TOKEN_AGE=${NOTES_ACCESS_TOKEN_AGE}
@@ -267,6 +293,8 @@ services:
 
   notes-auth-worker:
     image: standardnotes/auth:latest
+    networks:
+      - self-hosted-services
     entrypoint: [./packages/auth/docker/entrypoint.sh, start-worker]
     environment:
       - ACCESS_TOKEN_AGE=${NOTES_ACCESS_TOKEN_AGE}
@@ -305,6 +333,8 @@ services:
 
   notes-db:
     image: mysql:5.6
+    networks:
+      - self-hosted-services
     volumes:
       - notes-db:/var/lib/mysql
       - notes-db:/docker-entrypoint-initdb.d
@@ -323,6 +353,8 @@ services:
 
   notes-files:
     image: standardnotes/files:latest
+    networks:
+      - self-hosted-services
     volumes:
       - notes-files:/var/www/data/uploads
     entrypoint: [./packages/files/docker/entrypoint.sh, start-web]
@@ -345,14 +377,16 @@ services:
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
-        - traefik.http.routers.notes-files.entrypoints=websecure
+        - traefik.http.routers.notes-files.entrypoints=web-secure
         - traefik.http.routers.notes-files.rule=Host(`${NOTES_FILES_HOSTNAME}`)
-        - traefik.http.routers.notes-files.tls.certresolver=selfhostedservices
+        - traefik.http.routers.notes-files.tls.certresolver=self-hosted-services
         - traefik.http.routers.notes-files.middlewares=cors-headers
         - traefik.http.services.notes-files.loadbalancer.server.port=3000
 
   notes-gateway:
     image: standardnotes/api-gateway:latest
+    networks:
+      - self-hosted-services
     entrypoint: [./packages/api-gateway/docker/entrypoint.sh, start-web]
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
@@ -375,14 +409,16 @@ services:
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*
         - traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=*
-        - traefik.http.routers.notes-gateway.entrypoints=websecure
+        - traefik.http.routers.notes-gateway.entrypoints=web-secure
         - traefik.http.routers.notes-gateway.rule=Host(`${NOTES_SYNC_HOSTNAME}`)
-        - traefik.http.routers.notes-gateway.tls.certresolver=selfhostedservices
+        - traefik.http.routers.notes-gateway.tls.certresolver=self-hosted-services
         - traefik.http.routers.notes-gateway.middlewares=cors-headers
         - traefik.http.services.notes-gateway.loadbalancer.server.port=3000
 
   notes-sync:
     image: standardnotes/syncing-server-js:latest
+    networks:
+      - self-hosted-services
     entrypoint: [./packages/syncing-server/docker/entrypoint.sh, start-web]
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
@@ -411,6 +447,8 @@ services:
 
   notes-sync-worker:
     image: standardnotes/syncing-server-js:latest
+    networks:
+      - self-hosted-services
     entrypoint: [./packages/syncing-server/docker/entrypoint.sh, start-worker]
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
@@ -439,6 +477,8 @@ services:
 
   notes-workspace:
     image: standardnotes/workspace:latest
+    networks:
+      - self-hosted-services
     entrypoint: [./packages/workspace/docker/entrypoint.sh, start-web]
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
@@ -463,6 +503,8 @@ services:
 
   notes-workspace-worker:
     image: standardnotes/workspace:latest
+    networks:
+      - self-hosted-services
     entrypoint: [./packages/workspace/docker/entrypoint.sh, start-worker]
     environment:
       - AUTH_JWT_SECRET=${NOTES_AUTH_JWT_SECRET}
@@ -487,6 +529,8 @@ services:
 
   protonmail:
     image: ghcr.io/christoffercarlsson/protonmail-bridge:2.3.0
+    networks:
+      - self-hosted-services
     volumes:
       - protonmail:/root
     deploy:
@@ -495,6 +539,8 @@ services:
 
   redis:
     image: redis:alpine
+    networks:
+      - self-hosted-services
     deploy:
       restart_policy:
         condition: on-failure
@@ -506,18 +552,21 @@ services:
 
   traefik:
     image: traefik:v2.8
+    networks:
+      - self-hosted-services
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=self-hosted-services
       - --providers.docker.swarmMode=true
       - --serverstransport.insecureskipverify=true
-      - --entrypoints.websecure.address=:443
+      - --entrypoints.web-secure.address=:443
       - --entrypoints.web.address=:80
-      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.to=web-secure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
-      - --certificatesresolvers.selfhostedservices.acme.tlschallenge=true
-      - --certificatesresolvers.selfhostedservices.acme.email=${LETSENCRYPT_EMAIL}
-      - --certificatesresolvers.selfhostedservices.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.self-hosted-services.acme.tlschallenge=true
+      - --certificatesresolvers.self-hosted-services.acme.email=${LETSENCRYPT_EMAIL}
+      - --certificatesresolvers.self-hosted-services.acme.storage=/letsencrypt/acme.json
     ports:
       - 80:80
       - 443:443
@@ -533,6 +582,8 @@ services:
 
   uptime-kuma:
     image: louislam/uptime-kuma:latest
+    networks:
+      - self-hosted-services
     volumes:
       - uptime-kuma:/app/data
     deploy:
@@ -540,15 +591,12 @@ services:
         condition: on-failure
       labels:
         - traefik.enable=true
-        - traefik.http.routers.uptime-kuma.entrypoints=websecure
+        - traefik.http.routers.uptime-kuma.entrypoints=web-secure
         - traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_KUMA_HOSTNAME}`)
-        - traefik.http.routers.uptime-kuma.tls.certresolver=selfhostedservices
+        - traefik.http.routers.uptime-kuma.tls.certresolver=self-hosted-services
         - traefik.http.services.uptime-kuma.loadbalancer.server.port=3001
 
-  watchtower:
-    image: containrrr/watchtower:latest
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    deploy:
-      restart_policy:
-        condition: on-failure
+networks:
+  self-hosted-services:
+    name: self-hosted-services
+    external: true
