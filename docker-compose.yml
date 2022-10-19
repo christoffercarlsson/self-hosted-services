@@ -614,5 +614,6 @@ volumes:
   nextcloud:
   nextcloud-db:
   notes-db:
+  notes-files:
   protonmail:
   uptime-kuma:
