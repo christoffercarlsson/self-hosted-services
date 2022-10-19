@@ -4,6 +4,7 @@ services:
     image: qmcgaw/ddns-updater
     network_mode: bridge
     volumes:
+      - ddns-updater:/updater/data
       - ./config.json:/updater/data/config.json
     deploy:
       placement:
@@ -11,3 +12,6 @@ services:
           - node.role == manager
       restart_policy:
         condition: on-failure
+
+volumes:
+  ddns-updater:
