@@ -56,6 +56,13 @@ create_subscription() {
   echo "Please consider donating to Standard Notes if you do not plan on purchasing a subscription."
 }
 
+deploy() {
+  set -a
+  source $ENV_FILE
+  set +a
+  docker stack deploy -c "$BASE_DIRECTORY/docker-compose.yml" ${1:-DOCKER_STACK_NAME}
+}
+
 set_placeholder() {
   local value=$(echo $1 | tr '[:upper:]' '[:lower:]')
   eval $SED_COMMAND "s#$value#$2#g" $ENV_FILE
@@ -111,6 +118,9 @@ setup() {
 case "$1" in
   "create-subscription" | "create_subscription")
     create_subscription $2
+    ;;
+  "deploy")
+    deploy $2
     ;;
   "secret" | "set-secret" | "set_secret")
     set_secret $2
