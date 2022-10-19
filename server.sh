@@ -1,8 +1,8 @@
 #!/bin/bash
 
-SCRIPT_DIRECTORY=$(realpath -s $(dirname $0))
-ENV_FILE="$SCRIPT_DIRECTORY/.env"
-SAMPLE_ENV_FILE="$SCRIPT_DIRECTORY/sample.env"
+BASE_DIRECTORY=$(realpath -s $(dirname $0))
+ENV_FILE="$BASE_DIRECTORY/.env"
+SAMPLE_ENV_FILE="$BASE_DIRECTORY/sample.env"
 
 SED_COMMAND="sed -i"
 if [[ "$(uname)" == "Darwin" ]]
@@ -86,6 +86,16 @@ set_secrets() {
   set_secret "NOTES_VALET_TOKEN_SECRET"
 }
 
+setup_ddns() {
+  local ddns_updater_dir="$BASE_DIRECTORY/ddns-updater"
+  local ddns_updater_config="$ddns_updater_dir/config.json"
+  mkdir -p $ddns_updater_dir
+  touch $ddns_updater_config
+  chown -R 1000 $ddns_updater_dir
+  chmod 700 $ddns_updater_dir
+  chmod 400 $ddns_updater_config
+}
+
 setup() {
   ensure_not_empty "$1" "Please provide a root domain name."
   ensure_not_empty "$2" "Please provide an email address for Let's Encrypt."
@@ -94,6 +104,7 @@ setup() {
   set_root_domain $1
   set_letsencrypt_email $2
   set_secrets
+  setup_ddns
   echo "Default configuration file created. Feel free to modify values as needed."
 }
 
