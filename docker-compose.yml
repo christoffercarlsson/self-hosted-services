@@ -604,4 +604,4 @@ networks:
 volumes:
   jellyfin-media:
     external: true
-    name: self-hosted-jellyfin
+    name: jellyfin-media
