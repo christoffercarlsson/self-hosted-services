@@ -226,7 +226,7 @@ services:
       restart_policy:
         condition: on-failure
     healthcheck:
-      test: [CMD-SHELL, 'pg_isready -U ${NEXTCLOUD_DB_USER}']
+      test: [CMD-SHELL, 'pg_isready -U nextcloud']
       interval: 10s
       timeout: 5s
       retries: 5
