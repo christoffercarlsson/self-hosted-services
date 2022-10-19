@@ -602,6 +602,17 @@ networks:
     name: self-hosted-services
 
 volumes:
+  bitwarden:
+  conduit:
+  ghost:
+  ghost-db:
+  jellyfin:
   jellyfin-media:
     external: true
     name: jellyfin-media
+  letsencrypt:
+  nextcloud:
+  nextcloud-db:
+  notes-db:
+  protonmail:
+  uptime-kuma:
