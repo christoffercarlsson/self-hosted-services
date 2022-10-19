@@ -3,9 +3,6 @@ name: self-hosted-services
 services:
   bitwarden:
     image: vaultwarden/server:latest
-    depends_on:
-      - protonmail
-      - traefik
     volumes:
       - bitwarden:/data
     environment:
@@ -24,8 +21,6 @@ services:
   conduit:
     image: matrixconduit/matrix-conduit:latest
     user: root
-    depends_on:
-      - traefik
     volumes:
       - conduit:/var/lib/matrix-conduit
     environment:
@@ -56,8 +51,6 @@ services:
 
   conduit-well-known:
     image: nginx:latest
-    depends_on:
-      - traefik
     volumes:
       - ./conduit/well-known.template:/etc/nginx/conf.d/conduit-well-known.template
     environment:
@@ -82,8 +75,6 @@ services:
 
   excalidraw:
     image: excalidraw/excalidraw:latest
-    depends_on:
-      - traefik
     deploy:
       restart_policy:
         condition: on-failure
@@ -96,10 +87,6 @@ services:
 
   ghost:
     image: ghost:alpine
-    depends_on:
-      - ghost-db
-      - protonmail
-      - traefik
     volumes:
       - ghost:/var/lib/ghost/content
     environment:
@@ -134,8 +121,6 @@ services:
 
   jellyfin:
     image: jellyfin/jellyfin:latest
-    depends_on:
-      - traefik
     volumes:
       - jellyfin:/cache
       - jellyfin:/config
@@ -154,8 +139,6 @@ services:
 
   libretranslate:
     image: libretranslate/libretranslate:latest
-    depends_on:
-      - traefik
     deploy:
       restart_policy:
         condition: on-failure
@@ -168,11 +151,6 @@ services:
 
   nextcloud:
     image: lscr.io/linuxserver/nextcloud:latest
-    depends_on:
-      - nextcloud-db
-      - protonmail
-      - redis
-      - traefik
     volumes:
       - nextcloud:/config
       - nextcloud:/data
@@ -220,9 +198,6 @@ services:
 
   notes:
     image: standardnotes/web:stable
-    depends_on:
-      - notes-gateway
-      - traefik
     environment:
       - DASHBOARD_URL=http://standardnotes.com/dashboard
       - DEFAULT_SYNC_SERVER=https://${NOTES_SYNC_HOSTNAME}
@@ -241,9 +216,6 @@ services:
 
   notes-auth:
     image: standardnotes/auth:latest
-    depends_on:
-      - notes-db
-      - redis
     entrypoint: [./packages/auth/docker/entrypoint.sh, start-web]
     env_file:
       - notes/base.env
@@ -266,10 +238,6 @@ services:
 
   notes-auth-worker:
     image: standardnotes/auth:latest
-    depends_on:
-      - notes-auth
-      - notes-db
-      - redis
     entrypoint: [./packages/auth/docker/entrypoint.sh, start-worker]
     env_file:
       - notes/base.env
@@ -310,10 +278,6 @@ services:
 
   notes-files:
     image: standardnotes/files:latest
-    depends_on:
-      - notes-db
-      - redis
-      - traefik
     entrypoint: [./packages/files/docker/entrypoint.sh, start-web]
     env_file: notes/base.env
     environment:
@@ -336,11 +300,6 @@ services:
 
   notes-gateway:
     image: standardnotes/api-gateway:latest
-    depends_on:
-      - notes-auth
-      - notes-sync
-      - redis
-      - traefik
     entrypoint: [./packages/api-gateway/docker/entrypoint.sh, start-web]
     env_file: notes/base.env
     environment:
@@ -365,9 +324,6 @@ services:
 
   notes-sync:
     image: standardnotes/syncing-server-js:latest
-    depends_on:
-      - notes-db
-      - redis
     entrypoint: [./packages/syncing-server/docker/entrypoint.sh, start-web]
     env_file:
       - notes/base.env
@@ -386,10 +342,6 @@ services:
 
   notes-sync-worker:
     image: standardnotes/syncing-server-js:latest
-    depends_on:
-      - notes-db
-      - notes-sync
-      - redis
     entrypoint: [./packages/syncing-server/docker/entrypoint.sh, start-worker]
     env_file:
       - notes/base.env
@@ -408,9 +360,6 @@ services:
 
   notes-workspace:
     image: standardnotes/workspace:latest
-    depends_on:
-      - notes-db
-      - redis
     entrypoint: [./packages/workspace/docker/entrypoint.sh, start-web]
     env_file:
       - notes/base.env
@@ -426,10 +375,6 @@ services:
 
   notes-workspace-worker:
     image: standardnotes/workspace:latest
-    depends_on:
-      - notes-db
-      - notes-workspace
-      - redis
     entrypoint: [./packages/workspace/docker/entrypoint.sh, start-worker]
     env_file:
       - notes/base.env
@@ -491,8 +436,6 @@ services:
 
   uptime-kuma:
     image: louislam/uptime-kuma:latest
-    depends_on:
-      - traefik
     volumes:
       - uptime-kuma:/app/data
     deploy:
