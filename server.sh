@@ -60,7 +60,7 @@ deploy() {
   set -a
   source $ENV_FILE
   set +a
-  docker stack deploy -c "$BASE_DIRECTORY/docker-compose.yml" "${1:-$DOCKER_STACK_NAME}"
+  docker stack deploy -c "$BASE_DIRECTORY/docker-compose.yml" "self-hosted"
 }
 
 set_placeholder() {
@@ -120,7 +120,7 @@ case "$1" in
     create_subscription $2
     ;;
   "deploy")
-    deploy $2
+    deploy
     ;;
   "secret" | "set-secret" | "set_secret")
     set_secret $2
