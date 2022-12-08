@@ -7,8 +7,9 @@ services:
     volumes:
       - bitwarden:/data
     environment:
-      - SIGNUPS_ALLOWED=${BITWARDEN_SIGNUPS_ALLOWED}
       - INVITATIONS_ALLOWED=${BITWARDEN_INVITATIONS_ALLOWED}
+      - SHOW_PASSWORD_HINT=${BITWARDEN_SHOW_PASSWORD_HINT}
+      - SIGNUPS_ALLOWED=${BITWARDEN_SIGNUPS_ALLOWED}
     deploy:
       placement:
         constraints:
